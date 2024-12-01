@@ -13,4 +13,8 @@
     <ProjectReference Include="..\day_1.Core\day1_core.fsproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Fable.Browser.Dom" Version="2.18.0" />
+  </ItemGroup>
+
 </Project>
