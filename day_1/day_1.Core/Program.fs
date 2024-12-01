@@ -12,8 +12,11 @@ let parseInput (input: string): (int*int) list =
         |> Array.map(fun strings -> Int32.Parse(strings.[0]), Int32.Parse(strings.[1]))
         |> Array.toList
 
-let splitAndSortList (pairList: (int*int) list): (int list)*(int list) = 
-    (pairList |> List.map fst |> List.sort, pairList |> List.map snd |> List.sort)
+let split (pairList: (int*int) list): (int list)*(int list) = 
+    pairList |> List.map fst, pairList |> List.map snd 
+
+let splitAndSort (pairList: (int*int) list): (int list)*(int list) = 
+    pairList |> List.map fst |> List.sort, pairList |> List.map snd  |> List.sort
 
 let findDistance (l1: int list,l2: int list) : int =
     List.zip l1 l2
@@ -29,12 +32,12 @@ let productOfOccurances (counts: (int*int) list) =
 let distance (input: string) = 
     input
         |> parseInput
-        |> splitAndSortList
+        |> splitAndSort
         |> findDistance 
 
 let productOfInput (input: string) = 
     input
         |> parseInput
-        |> splitAndSortList
+        |> split 
         |> countOccurrances
         |> productOfOccurances
