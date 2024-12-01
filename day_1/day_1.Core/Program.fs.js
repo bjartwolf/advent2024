@@ -29,11 +29,7 @@ export function splitAndSort(pairList) {
 }
 
 export function findDistance(l1, l2) {
-    return sumBy((tupledArg) => {
-        const n1 = tupledArg[0] | 0;
-        const n2 = tupledArg[1] | 0;
-        return Math.abs(n1 - n2) | 0;
-    }, zip(l1, l2), {
+    return sumBy((tupledArg) => Math.abs(tupledArg[0] - tupledArg[1]), zip(l1, l2), {
         GetZero: () => 0,
         Add: (x, y) => (x + y),
     });
@@ -50,11 +46,7 @@ export function countOccurrances(l1, l2) {
 }
 
 export function productOfOccurances(counts) {
-    return fold((acc, tupledArg) => {
-        const num = tupledArg[0] | 0;
-        const count = tupledArg[1] | 0;
-        return (acc + (num * count)) | 0;
-    }, 0, counts);
+    return fold((acc, tupledArg) => (acc + (tupledArg[0] * tupledArg[1])), 0, counts);
 }
 
 export function distance(input) {
