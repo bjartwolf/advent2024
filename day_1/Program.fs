@@ -4,9 +4,7 @@ module Input =
     open Xunit 
 
     let readInit (filePath: string): (int*int) list = 
-        use sr = new StreamReader (filePath) 
-        let lines = sr.ReadToEnd()
-        lines.Split(System.Environment.NewLine);
+        System.IO.File.ReadAllLines(filePath) 
             |> Array.map(fun line -> line.Split("  ")) 
             |> Array.map(fun strings -> Int32.Parse(strings.[0]), Int32.Parse(strings.[1]))
             |> Array.toList
