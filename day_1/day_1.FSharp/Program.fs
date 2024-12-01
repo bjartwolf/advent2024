@@ -1,18 +1,18 @@
 ﻿module Input
 open System
 
-let readInit (filePath: string): (int*int) list = 
-    System.IO.File.ReadAllLines(filePath) 
-        |> Array.map(fun line -> line.Split("  ")) 
-        |> Array.map(fun strings -> Int32.Parse(strings.[0]), Int32.Parse(strings.[1]))
-        |> Array.toList
+let readInit (filePath: string): string = 
+    System.IO.File.ReadAllText(filePath) 
 
 module Program = 
     open Day1Core
     let [<EntryPoint>] main _ = 
-        let input = readInit "input2.txt" 
-        let (l1,l2) = splitAndSortList input 
-        printfn "%A" (countOccurrances (l1,l2) |> productOfOccurances)
+        let input1 = readInit "input1.txt" 
+        let input2 = readInit "input2.txt" 
+        printfn "%A" (distance input1)
+        printfn "%A" (distance input2)
+        printfn "%A" (productOfInput input1)
+        printfn "%A" (productOfInput input2)
         0
 
 
