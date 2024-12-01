@@ -1,5 +1,5 @@
 import { split as split_1 } from "../day_1.Browser/fable_modules/fable-library-js.4.24.0/String.js";
-import { fold, zip, sumBy, sort, map as map_1, ofArray } from "../day_1.Browser/fable_modules/fable-library-js.4.24.0/List.js";
+import { fold, sumBy, zip, sort, map as map_1, ofArray } from "../day_1.Browser/fable_modules/fable-library-js.4.24.0/List.js";
 import { item, map } from "../day_1.Browser/fable_modules/fable-library-js.4.24.0/Array.js";
 import { parse } from "../day_1.Browser/fable_modules/fable-library-js.4.24.0/Int32.js";
 import { numberHash, comparePrimitives } from "../day_1.Browser/fable_modules/fable-library-js.4.24.0/Util.js";
@@ -26,6 +26,10 @@ export function splitAndSort(pairList) {
     }), sort(map_1((tuple_1) => tuple_1[1], pairList), {
         Compare: comparePrimitives,
     })];
+}
+
+export function findDiff(l1, l2) {
+    return map_1((tupledArg) => Math.abs(tupledArg[0] - tupledArg[1]), zip(l1, l2));
 }
 
 export function findDistance(l1, l2) {

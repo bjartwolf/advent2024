@@ -18,6 +18,10 @@ let split (pairList: (int*int) list): (int list)*(int list) =
 let splitAndSort (pairList: (int*int) list): (int list)*(int list) = 
     pairList |> List.map fst |> List.sort, pairList |> List.map snd  |> List.sort
 
+let findDiff (l1: int list,l2: int list) : int list =
+    List.zip l1 l2
+        |> List.map (fun (n1,n2) -> abs(n1 - n2))  
+
 let findDistance (l1: int list,l2: int list) : int =
     List.zip l1 l2
         |> List.sumBy (fun (n1,n2) -> abs(n1 - n2))  
