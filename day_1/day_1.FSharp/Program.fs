@@ -1,5 +1,4 @@
 ﻿module Input
-open System
 
 let readInit (filePath: string): string = 
     System.IO.File.ReadAllText(filePath) 

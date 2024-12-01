@@ -13,6 +13,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "day_1.Python", "day_1.Pytho
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "day_1.Node", "day_1.Node\day_1.Node.fsproj", "{923BBCED-7216-4D7C-876E-7A36EB2B5B08}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "day_1.Browser", "day_1.Browser\day_1.Browser.fsproj", "{C0A20DCD-1545-4B53-8AEC-5C8389F4BE20}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{923BBCED-7216-4D7C-876E-7A36EB2B5B08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{923BBCED-7216-4D7C-876E-7A36EB2B5B08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{923BBCED-7216-4D7C-876E-7A36EB2B5B08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0A20DCD-1545-4B53-8AEC-5C8389F4BE20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0A20DCD-1545-4B53-8AEC-5C8389F4BE20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0A20DCD-1545-4B53-8AEC-5C8389F4BE20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0A20DCD-1545-4B53-8AEC-5C8389F4BE20}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
