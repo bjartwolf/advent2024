@@ -6,3 +6,6 @@ dotnet test
 dotnet run --project .\day_1.FSharp\day_1.FSharpHost.fsproj
 python program.py
 ```
+
+To run it in node, check out the readme in the ```day_1.Node``` folder.
+To run it in python , check out the readme in the ```day_1.Python``` folder.
