@@ -9,6 +9,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "day1_core", "day_1.Core\day
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "day_1.FSharpHost", "day_1.FSharp\day_1.FSharpHost.fsproj", "{5169715F-4D73-407C-9C44-48EBDCC59119}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "day_1.Python", "day_1.Python\day_1.Python.fsproj", "{A16F79D8-8E38-4AB9-8B2D-63B2BA9BD5D4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{5169715F-4D73-407C-9C44-48EBDCC59119}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5169715F-4D73-407C-9C44-48EBDCC59119}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5169715F-4D73-407C-9C44-48EBDCC59119}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A16F79D8-8E38-4AB9-8B2D-63B2BA9BD5D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A16F79D8-8E38-4AB9-8B2D-63B2BA9BD5D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A16F79D8-8E38-4AB9-8B2D-63B2BA9BD5D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A16F79D8-8E38-4AB9-8B2D-63B2BA9BD5D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
