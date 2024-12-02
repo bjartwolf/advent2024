@@ -29,8 +29,22 @@ module Day2 =
         else 
             derivatives |> List.forall (fun x -> x < 0 && x >= -3)
 
+    let safeWithIndexRemovedAt (report: int list) (index: int): bool = 
+        let newReport = report |> List.removeAt index
+        safe newReport
+
+    let safeWithSingleBadLevel( report: int list): bool = 
+        let indexes = [0 .. (report.Length - 1)]
+        if safe report then
+            true
+        else
+            List.exists (fun i -> safeWithIndexRemovedAt report i) indexes
+
     let countSafe (reports: int list list): int = 
         reports |> List.filter (fun r -> safe r) |> List.length
+
+    let countSafeWithSingeBadLevel (reports: int list list): int = 
+        reports |> List.filter (fun r -> safeWithSingleBadLevel r) |> List.length
 
 
 module Test = 
@@ -69,8 +83,10 @@ module Test =
         Assert.Equivalent([7;6;4;2;1], input.[0]) 
         Assert.Equivalent([1;3;6;7;9], input.[5]) 
         Assert.Equal(2, countSafe input)
+        Assert.Equal(4, countSafeWithSingeBadLevel input)
         let input2 = readInit "input2.txt" 
-        Assert.Equal(2, countSafe input2)
+        Assert.Equal(591, countSafe input2)
+        Assert.Equal(621, countSafeWithSingeBadLevel input2)
 
 module Program = 
     let [<EntryPoint>] main _ =
