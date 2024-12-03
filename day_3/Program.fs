@@ -10,8 +10,11 @@ module Input =
             
     let rec processWithDoAndDont (input: string) =
         let txt = input.Split("don't()", 2)
-        let sum = txt.[0] |> findMatches |> Seq.sumBy (fun (x,y) -> x * y) 
-        match txt with | [|_|]  -> sum | _ -> sum + processWithDoAndDont (txt.[1].Split("do()", 2)[1])
+        let sum a = a |> findMatches |> Seq.sumBy (fun (x,y) -> x * y) 
+        match txt with 
+            | [|t|]  -> sum t
+            | [|t;r|] -> sum t + processWithDoAndDont (r.Split("do()", 2)[1])
+            | _ -> failwith("You messed up something")
 
     [<Fact>]
     let test2 () = 
