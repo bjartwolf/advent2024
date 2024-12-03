@@ -33,15 +33,20 @@ module Input =
         let mutable stop = false
         let mutable inputToProcessLeft:string = input
         while not stop && i < 1000 do
-            let txt = inputToProcessLeft.Split("don't()")
+            let txt = inputToProcessLeft.Split("don't()", 2, StringSplitOptions.None)
             let doPart = txt.[0]
+            // assume everything to the next dont is ok to process, multiple do will be ignored
             sum <- sum + (doPart|> findMatches |> product )
             if txt.Length = 1 then
+                // no more don't, we should have processed to the end
                 stop <- true
             else
-                let nextLegalPart = (txt.[1]).Split("do()")
+                let dontpart = txt.[1]
+                // we have more to process, the first part is processed, and we should not process until the next do()
+                let nextLegalPart = dontpart.Split("do()", 2, StringSplitOptions.None)
                 if (nextLegalPart.Length = 2) then
                     inputToProcessLeft <- nextLegalPart[1]
+                    //Console.WriteLine(i)
                     i <- i + 1
                 else
                     stop <- true
@@ -59,6 +64,6 @@ module Input =
         Assert.False(input.Contains(System.Environment.NewLine)) 
         Assert.Equal(184511516L, input2 |> findMatches |> product)
         Assert.Equal(48L, input |> processWithDoAndDont)
-        Assert.Equal(4209935L, input2 |> processWithDoAndDont)
+        Assert.Equal(90044227L, input2 |> processWithDoAndDont)
 
 module Program = let [<EntryPoint>] main _ = 0
