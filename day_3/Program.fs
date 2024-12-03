@@ -1,7 +1,6 @@
 open System.Text.RegularExpressions
 
 module Input =
-    open System
     open System.IO
     open Xunit 
 
@@ -12,11 +11,7 @@ module Input =
     let rec processWithDoAndDont (input: string) =
         let txt = input.Split("don't()", 2)
         let sum = txt.[0] |> findMatches |> Seq.sumBy (fun (x,y) -> x * y) 
-        if txt.Length = 1 then
-            sum
-        else
-            let nextLegalPart = txt.[1].Split("do()", 2)
-            sum + processWithDoAndDont nextLegalPart.[1]
+        match txt with | [|_|]  -> sum | _ -> sum + processWithDoAndDont (txt.[1].Split("do()", 2)[1])
 
     [<Fact>]
     let test2 () = 
