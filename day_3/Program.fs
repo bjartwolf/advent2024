@@ -10,12 +10,12 @@ module Input =
             yield (regexMatch.Groups.["num1"].Value |> int, regexMatch.Groups.["num2"].Value |> int) ]
             
     let rec processWithDoAndDont (input: string) =
-        let txt = input.Split("don't()", 2, StringSplitOptions.None)
+        let txt = input.Split("don't()", 2)
         let sum = txt.[0] |> findMatches |> Seq.sumBy (fun (x,y) -> x * y) 
         if txt.Length = 1 then
             sum
         else
-            let nextLegalPart = txt.[1].Split("do()", 2, StringSplitOptions.None)
+            let nextLegalPart = txt.[1].Split("do()", 2)
             sum + processWithDoAndDont nextLegalPart.[1]
 
     [<Fact>]
