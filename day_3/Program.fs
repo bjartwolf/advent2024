@@ -31,14 +31,20 @@ module Input =
         let mutable sum: int64 = 0
         let mutable i = 0
         let mutable stop = false
-        while not stop && i < 100 do
-            let txt = input.Split("don't")
-            let foo1 = txt.[0] |> findMatches |> product
-            let foo2 = txt.[1].Split("do()")[1] |> findMatches |> product
-            sum <- sum + foo1 + foo2
-            if true then // stop when we have nothing left
+        let mutable inputToProcessLeft:string = input
+        while not stop && i < 1000 do
+            let txt = inputToProcessLeft.Split("don't()")
+            let doPart = txt.[0]
+            sum <- sum + (doPart|> findMatches |> product )
+            if txt.Length = 1 then
                 stop <- true
-            i <- i + 1
+            else
+                let nextLegalPart = (txt.[1]).Split("do()")
+                if (nextLegalPart.Length = 2) then
+                    inputToProcessLeft <- nextLegalPart[1]
+                    i <- i + 1
+                else
+                    stop <- true
         sum
 
     [<Fact>]
@@ -53,5 +59,6 @@ module Input =
         Assert.False(input.Contains(System.Environment.NewLine)) 
         Assert.Equal(184511516L, input2 |> findMatches |> product)
         Assert.Equal(48L, input |> processWithDoAndDont)
+        Assert.Equal(4209935L, input2 |> processWithDoAndDont)
 
 module Program = let [<EntryPoint>] main _ = 0
