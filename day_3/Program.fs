@@ -7,7 +7,7 @@ module Input =
 
     let findMatches input = 
         [for regexMatch in (new Regex(@"mul\((?<num1>\d{1,3}),(?<num2>\d{1,3})\)")).Matches(input) do
-            yield (regexMatch.Groups.["num1"].Value |> Int32.Parse, regexMatch.Groups.["num2"].Value |> Int32.Parse) ]
+            yield (regexMatch.Groups.["num1"].Value |> int, regexMatch.Groups.["num2"].Value |> int) ]
             
     let rec processWithDoAndDont (input: string) =
         let txt = input.Split("don't()", 2, StringSplitOptions.None)
