@@ -28,10 +28,18 @@ module Input =
     let processWithDoAndDont (input: string) : int64 =
         // assume we start with do
         // split out don't
-        let txt = input.Split("don't")
-        let foo1 = txt.[0] |> findMatches |> product
-        let foo2 = txt.[1].Split("do()")[1] |> findMatches |> product
-        foo1 + foo2 
+        let mutable sum: int64 = 0
+        let mutable i = 0
+        let mutable stop = false
+        while not stop && i < 100 do
+            let txt = input.Split("don't")
+            let foo1 = txt.[0] |> findMatches |> product
+            let foo2 = txt.[1].Split("do()")[1] |> findMatches |> product
+            sum <- sum + foo1 + foo2
+            if true then // stop when we have nothing left
+                stop <- true
+            i <- i + 1
+        sum
 
     [<Fact>]
     let test2 () = 
