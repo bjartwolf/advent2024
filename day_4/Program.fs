@@ -25,6 +25,9 @@ module Input =
                 yield [0 .. stringLength - 1] |> List.map (fun i -> input.[i].[i]) |> String.Concat
             if line > 0 then
                 yield [0 .. stringLength - 1] |> List.map (fun i -> input.[i].[i + line]) |> String.Concat
+            if line < 0 then
+                yield [0 .. stringLength - 1] |> List.map (fun i -> input.[i+(-line)].[i]) |> String.Concat
+
 
 //            let dVertical = [0 .. stringLength - 1] 
  //                                   |> List.map (fun i -> input.[i].[i])  
