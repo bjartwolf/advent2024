@@ -75,8 +75,8 @@ module Input =
         //printf "%A" (inputTest |> createAllPertubations |> List.ofSeq)
         let input = readInit "input1.txt" 
         Assert.Equal(18, input |>createAllPertubations |> findOccurances) 
-        let input = readInit "input2.txt" 
-        Assert.Equal(18, input |>createAllPertubations |> findOccurances) 
+        let input2 = readInit "input2.txt" 
+        Assert.Equal(2524, input2 |>createAllPertubations |> findOccurances) 
         //printf "%A" (input |> createPertubations  |> List.ofSeq)
         //Assert.Equal(1, input.Length) 
 
