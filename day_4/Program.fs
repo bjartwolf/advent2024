@@ -31,7 +31,8 @@ module Input =
 *)
             if line = 0 then
                 yield [0 .. stringLength - 1] |> List.map (fun i -> input.[stringLength - i - 1].[i]) |> String.Concat
- 
+            if line > 0 then
+                yield [0 .. stringLength - 1] |> List.map (fun i -> input.[stringLength - i - 1 + line].[i + line]) |> String.Concat
 //            let dVertical = [0 .. stringLength - 1] 
  //                                   |> List.map (fun i -> input.[i].[i])  
   //                                  |> String.Concat
