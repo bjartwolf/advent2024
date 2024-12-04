@@ -6,16 +6,33 @@ module Input =
     let readInit (filePath: string): string list = 
         File.ReadAllLines(filePath) |> Array.toList
     
-    let createPertubations (wordLength: int) (input: string list): string seq = 
+    let createPertubations (input: string list): string seq = 
         let n = input.Length
         [for line in [0 .. (n - 1)] do
             // horiztonal lines
             yield input.[line]
-
             // vertical lines
-            let vertical = System.String.Concat([0 .. (n-1)] |> List.map (fun i -> input.[i].[line]) )
+            let vertical = [0 .. (n-1)] |> List.map (fun i -> input.[i].[line]) |> String.Concat
             yield vertical 
+       ]
+
+    let createPertubations2 (input: string list): string seq = 
+        let n = input.Length
+        [for line in [(-n+1) .. (n - 1)] do
+            let stringLength = n - abs line
+            printfn "%A %A" stringLength line
+            if line = 0 then
+                yield [0 .. stringLength - 1] |> List.map (fun i -> input.[i].[i]) |> String.Concat
+            if line > 0 then
+                yield [0 .. stringLength - 1] |> List.map (fun i -> input.[i].[i + line]) |> String.Concat
+
+//            let dVertical = [0 .. stringLength - 1] 
+ //                                   |> List.map (fun i -> input.[i].[i])  
+  //                                  |> String.Concat
+   //         yield dVertical
+            //yield line |> string
         ]
+
 
 
         // horizontal lines
@@ -36,10 +53,15 @@ module Input =
 
     [<Fact>]
     let test2 () = 
-        let inputTest = ["abcde"; "fghij"; "klmno"; "pqrst"; "uvwxy"]
-        printf "%A" (inputTest |> createPertubations 4 |> List.ofSeq)
+        let inputTest = ["abcde"; 
+                         "fghij"; 
+                         "klmno"; 
+                         "pqrst"; 
+                         "uvwxy"]
+        //printf "%A" (inputTest |> createPertubations  |> List.ofSeq)
+        printf "%A" (inputTest |> createPertubations2  |> List.ofSeq)
 //        let input = readInit "input1.txt" 
-        //printf "%A" (input |> createPertubations 4 |> List.ofSeq)
+        //printf "%A" (input |> createPertubations  |> List.ofSeq)
         //Assert.Equal(1, input.Length) 
 
 module Program = let [<EntryPoint>] main _ = 0
