@@ -53,7 +53,38 @@ module Input =
     let findOccurances (input: string list) : int =
         input |> List.map countOccurrences |> List.sum
 
-        // horizontal lines
+    let isXmasCross (cross:string list): bool =
+        let diag1 = [cross.[0][0]; cross.[1][1]; cross.[2][2]]  |> String.Concat
+        let diag2 = [cross.[2][0]; cross.[1][1]; cross.[0][2]] |> String.Concat
+        let diag1IsXmas = diag1 = "MAS" || diag1 |> reverseString = "MAS"
+        let diag2IsXmas = diag2 = "MAS" || diag2 |> reverseString = "MAS"
+        diag1IsXmas && diag2IsXmas 
+        
+    [<Fact>]
+    let test3 () = 
+        Assert.True( ["M_M";"_A_";"S_S"] |> isXmasCross)
+        Assert.False( ["__S";"_A_";"M__"] |> isXmasCross)
+        Assert.True(["M_S";"_A_";"M_S"] |> isXmasCross)
+
+
+    let findCheckers (input: string list): ((string list) seq) =
+        let n = input.Length
+        [for line in [1 .. (n - 2)] do
+            for col in [1 .. (n - 2)] do
+                if (input.[line][col] = 'A') then
+                    let lineAbove = input.[line - 1][col-1 ..col+1]
+                    let lineAt = input.[line][col-1 ..col+1]
+                    let lineBelow = input.[line + 1][col-1 ..col+1]
+                    yield [lineAbove;lineAt;lineBelow]
+        ]
+        
+    [<Fact>]
+    let test4 () = 
+        let input = readInit "input2.txt" 
+        let checkers = input |> findCheckers
+        let checkersWhichAreCross = checkers |> Seq.filter isXmasCross
+        let count = checkersWhichAreCross |> Seq.length
+        Assert.Equal(1873, count)
 
 
     // create all lines
