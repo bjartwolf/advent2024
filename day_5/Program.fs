@@ -3,15 +3,21 @@ module Input =
     open System.IO
     open Xunit 
 
-    let readInit (filePath: string): int list = 
-        use sr = new StreamReader (filePath) 
-        let line = sr.ReadLine()
-        let numbers = line.Split(",")
-        numbers |> Array.map(fun f -> Int32.Parse(f)) |> Array.toList
+    let parseRule (rule: string): int*int =
+        let splitRule = rule.Split("|", StringSplitOptions.RemoveEmptyEntries)
+        (int splitRule.[0], int splitRule.[1])
+
+    let readInit (filePath: string): (int*int) list * (int list) list = 
+        let txt = File.ReadAllText filePath 
+        let splitTxt = txt.Split(System.Environment.NewLine + System.Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+        let rules = splitTxt.[0].Split(System.Environment.NewLine, StringSplitOptions.RemoveEmptyEntries) |> Array.map parseRule |> Array.toList
+
+
+        (rules , [[1;2;3]])
 
     [<Fact>]
     let test2 () = 
-        let input = readInit "input1.txt" 
-        Assert.Equal(1, input.Length) 
+        let (rules, lists ) = readInit "input1.txt" 
+        Assert.Equal(1, rules.Length) 
 
 module Program = let [<EntryPoint>] main _ = 0
