@@ -26,11 +26,23 @@ module Input =
             | h :: t -> numIsInOrder rules h t && isSorted rules t
             | _ -> true
 
+    let compare (rules: (int*int) list) (a: int) (b: int) = 
+        let rule1 = rules |> List.exists (fun (ruleX,ruleY) -> ruleX = a && ruleY = b)
+        if rule1 then 1 
+        else -1
+
+    let sortWithRules rules (lst: int list) = 
+        lst |> List.sortWith (fun a b -> compare rules a b)
+
     let middle (lst: int list): int = 
         lst.[lst.Length/2]
 
     let solve1 (rules: (int*int) list) (lists: (int list) list) = 
         lists |> List.filter (fun x -> isSorted rules x) |> List.sumBy middle 
+
+    let solve2 (rules: (int*int) list) (lists: (int list) list) = 
+        lists |> List.filter (fun x -> not (isSorted rules x)) |> List.map (fun x -> sortWithRules rules x) |>List.sumBy middle 
+
 
     [<Fact>]
     let test2 () = 
@@ -45,7 +57,9 @@ module Input =
         Assert.False(isSorted rules lists.[4]) 
         Assert.False(isSorted rules lists.[4]) 
         Assert.Equal(143 , solve1 rules lists)
+        Assert.Equal(123 , solve2 rules lists)
         let (rules, lists ) = readInit "input2.txt" 
         Assert.Equal(4462 , solve1 rules lists)
+        Assert.Equal(6767, solve2 rules lists)
 
 module Program = let [<EntryPoint>] main _ = 0
