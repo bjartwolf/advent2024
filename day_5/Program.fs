@@ -11,13 +11,14 @@ module Input =
         let txt = File.ReadAllText filePath 
         let splitTxt = txt.Split(System.Environment.NewLine + System.Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
         let rules = splitTxt.[0].Split(System.Environment.NewLine, StringSplitOptions.RemoveEmptyEntries) |> Array.map parseRule |> Array.toList
-
-
-        (rules , [[1;2;3]])
+        let lists = splitTxt.[1].Split(System.Environment.NewLine, StringSplitOptions.RemoveEmptyEntries) 
+                                        |> Array.map (fun x -> x.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                                        |> Array.map (fun x -> x |> Array.map int |> Array.toList) |> Array.toList 
+        (rules , lists) 
 
     [<Fact>]
     let test2 () = 
         let (rules, lists ) = readInit "input1.txt" 
-        Assert.Equal(1, rules.Length) 
+        Assert.Equal(21, rules.Length) 
 
 module Program = let [<EntryPoint>] main _ = 0
