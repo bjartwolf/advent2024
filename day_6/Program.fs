@@ -33,6 +33,12 @@ module Input =
             let pipeMap = Map.ofList obstacles 
             (pipeMap, startPosition.Head)
 
+    let turn (direction:Direction): Direction = 
+        match direction with 
+            | N -> E
+            | W -> N
+            | S -> W
+            | E -> S
 
     let move (direction: Direction) ((y,x): Position): Position  =
         match direction with 
@@ -41,12 +47,32 @@ module Input =
             | E -> (y,x+1)
             | S -> (y+1,x)
 
+    let walkMap (world: World) (position: Position): World = 
+        let rec walk (world: World) (position: Position) (direction: Direction): World = 
+            let pos_ahead = move direction position
+            let tile_ahead = Map.tryFind pos_ahead world 
+            match tile_ahead with 
+                | Some(Free) | Some(Visited) -> 
+                    let newWorld = Map.add pos_ahead Visited world
+                    walk newWorld pos_ahead direction
+                | Some(Obstacle) -> 
+                    walk world position (turn direction)
+                | None -> world
+        let world' = Map.add position Visited world
+        walk world' position N
 
+
+    // assumption always start looking north
     [<Fact>]
     let test2 () = 
         let world, position = "input1.txt" |> readInit |> parsePipeMap
         Assert.Equal((6,4), position) 
         Assert.Equal(Obstacle, Map.find (0,4) world) 
         Assert.Equal(Free, Map.find (0,3) world) 
-
+        let walkedWorld = walkMap world position 
+        Assert.Equal(41, walkedWorld |> Map.filter (fun _ v -> v = Visited) |> Map.count)
+        let world2, position2 = "input2.txt" |> readInit |> parsePipeMap
+        let walkedWorld2 = walkMap world2 position2
+        // include the starting position
+        Assert.Equal(4433, walkedWorld2 |> Map.filter (fun _ v -> v = Visited) |> Map.count)
 module Program = let [<EntryPoint>] main _ = 0
