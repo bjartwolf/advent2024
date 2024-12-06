@@ -4,8 +4,8 @@ module Input =
     open Xunit 
 
     type Position = int *int
-    type Tile = Free | Visited | Obstacle 
     type Direction = W | N | E | S 
+    type Tile = Free | Visited of Direction list | Obstacle 
     type World = Map<Position, Tile>
 
     let readInit (filePath: string): string [] = 
@@ -52,14 +52,18 @@ module Input =
             let pos_ahead = move direction position
             let tile_ahead = Map.tryFind pos_ahead world 
             match tile_ahead with 
-                | Some(Free) | Some(Visited) -> 
-                    let newWorld = Map.add pos_ahead Visited world
+                | Some(Free)  -> 
+                    let newWorld = Map.add pos_ahead (Visited [direction]) world
+                    walk newWorld pos_ahead direction
+                | Some(Visited visitedDirections ) -> 
+                    let visitedDirections' = direction::visitedDirections
+                    let newWorld = Map.add pos_ahead (Visited visitedDirections') world
                     walk newWorld pos_ahead direction
                 | Some(Obstacle) -> 
                     walk world position (turn direction)
                 | None -> world
-        let world' = Map.add position Visited world
-        walk world' position N
+        let world' = Map.add position (Visited [N]) world
+        walk world' position N 
 
 
     // assumption always start looking north
@@ -70,9 +74,9 @@ module Input =
         Assert.Equal(Obstacle, Map.find (0,4) world) 
         Assert.Equal(Free, Map.find (0,3) world) 
         let walkedWorld = walkMap world position 
-        Assert.Equal(41, walkedWorld |> Map.filter (fun _ v -> v = Visited) |> Map.count)
+        Assert.Equal(41, walkedWorld |> Map.filter (fun _ v -> match v with | Visited _ -> true | _ -> false) |> Map.count)
         let world2, position2 = "input2.txt" |> readInit |> parsePipeMap
         let walkedWorld2 = walkMap world2 position2
-        // include the starting position
-        Assert.Equal(4433, walkedWorld2 |> Map.filter (fun _ v -> v = Visited) |> Map.count)
+        Assert.Equal(4433, walkedWorld2 |> Map.filter (fun _ v -> match v with | Visited _ -> true | _ -> false) |> Map.count)
+
 module Program = let [<EntryPoint>] main _ = 0
