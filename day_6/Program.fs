@@ -1,3 +1,5 @@
+open System
+
 module Input =
     open System
     open System.IO
@@ -86,7 +88,7 @@ module Input =
         walkC world' position N 
 
     // 10 eller 130 stort
-    let generateMaps (world: World) (size: int) (startPosition: Position ): World list = 
+    let generateMaps (world: World) (size: int) (startPosition: Position ): World seq = 
         [for i in 0 .. (size - 1) do
              for j in 0 .. (size - 1) do
                 let tile = Map.tryFind (i,j) world 
@@ -95,7 +97,14 @@ module Input =
                         let map' = Map.add (i,j) Obstacle world
                         yield map'
                     | _ -> ()
-        ] |> Seq.toList
+        ] 
+
+    let findNrOfCycleMaps (world: World) (size: int) (startPosition: Position ): int = 
+        let possibleMaps = generateMaps world size startPosition
+        possibleMaps |> Seq.map (fun m -> walkMapC m startPosition)
+                     |> Seq.filter (fun (_,cycle) -> cycle) 
+                     |> Seq.length
+         
 
     // assumption always start looking north
     [<Fact>]
@@ -104,11 +113,23 @@ module Input =
         Assert.Equal((6,4), position) 
         Assert.Equal(Obstacle, Map.find (0,4) world) 
         Assert.Equal(Free, Map.find (0,3) world) 
-        Assert.Equal(100-9, generateMaps world 10 position |> List.length)  // CAN WE PUT AN OBSTACLE ON START? Nah...
+        Assert.Equal(100-9, generateMaps world 10 position |> Seq.length)  // CAN WE PUT AN OBSTACLE ON START? Nah...
+        Assert.Equal(6, findNrOfCycleMaps world 10 position)
         let walkedWorld = walkMap world position 
         Assert.Equal(41, walkedWorld |> Map.filter (fun _ v -> match v with | Visited _ -> true | _ -> false) |> Map.count)
         let world2, position2 = "input2.txt" |> readInit |> parsePipeMap
         let walkedWorld2 = walkMap world2 position2
         Assert.Equal(4433, walkedWorld2 |> Map.filter (fun _ v ->  match v with | Visited _ -> true | _ -> false) |> Map.count)
+//        Assert.Equal(6, findNrOfCycleMaps world2 130 position2)
 
-module Program = let [<EntryPoint>] main _ = 0
+module Program = 
+    open Input
+    let [<EntryPoint>] main _ = 
+        let world2, position2 = "input2.txt" |> readInit |> parsePipeMap
+        let walkedWorld2 = walkMap world2 position2
+        let part1 = walkedWorld2 |> Map.filter (fun _ v ->  match v with | Visited _ -> true | _ -> false) |> Map.count
+        printfn "Part1: %A" part1
+        let part2 = findNrOfCycleMaps world2 130 position2
+        printfn "Part2: %A" part2
+        Console.ReadLine() |> ignore
+        0
