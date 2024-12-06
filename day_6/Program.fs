@@ -85,6 +85,18 @@ module Input =
         let world' = Map.add position (Visited [N]) world
         walkC world' position N 
 
+    // 10 eller 130 stort
+    let generateMaps (world: World) (size: int) (startPosition: Position ): World list = 
+        [for i in 0 .. (size - 1) do
+             for j in 0 .. (size - 1) do
+                let tile = Map.tryFind (i,j) world 
+                match tile with 
+                    | Some(Free) when (i,j) <> startPosition -> 
+                        let map' = Map.add (i,j) Obstacle world
+                        yield map'
+                    | _ -> ()
+        ] |> Seq.toList
+
     // assumption always start looking north
     [<Fact>]
     let test2 () = 
@@ -92,6 +104,7 @@ module Input =
         Assert.Equal((6,4), position) 
         Assert.Equal(Obstacle, Map.find (0,4) world) 
         Assert.Equal(Free, Map.find (0,3) world) 
+        Assert.Equal(100-9, generateMaps world 10 position |> List.length)  // CAN WE PUT AN OBSTACLE ON START? Nah...
         let walkedWorld = walkMap world position 
         Assert.Equal(41, walkedWorld |> Map.filter (fun _ v -> match v with | Visited _ -> true | _ -> false) |> Map.count)
         let world2, position2 = "input2.txt" |> readInit |> parsePipeMap
