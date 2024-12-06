@@ -65,6 +65,25 @@ module Input =
         let world' = Map.add position (Visited [N]) world
         walk world' position N 
 
+        // including cycledetection, return true if cycle detected, false if not
+    let walkMapC (world: World) (position: Position): (World * bool) = 
+        let rec walkC (world: World) (position: Position) (direction: Direction): (World*bool) = 
+            let pos_ahead = move direction position
+            let tile_ahead = Map.tryFind pos_ahead world 
+            match tile_ahead with 
+                | Some(Visited visitedDirections ) when List.contains direction visitedDirections -> (world, true)
+                | Some(Free)  -> 
+                    let newWorld = Map.add pos_ahead (Visited [direction]) world
+                    walkC newWorld pos_ahead direction
+                | Some(Visited visitedDirections ) -> 
+                    let visitedDirections' = direction::visitedDirections
+                    let newWorld = Map.add pos_ahead (Visited visitedDirections') world
+                    walkC newWorld pos_ahead direction
+                | Some(Obstacle) -> 
+                    walkC world position (turn direction)
+                | None -> (world, false)
+        let world' = Map.add position (Visited [N]) world
+        walkC world' position N 
 
     // assumption always start looking north
     [<Fact>]
@@ -77,6 +96,6 @@ module Input =
         Assert.Equal(41, walkedWorld |> Map.filter (fun _ v -> match v with | Visited _ -> true | _ -> false) |> Map.count)
         let world2, position2 = "input2.txt" |> readInit |> parsePipeMap
         let walkedWorld2 = walkMap world2 position2
-        Assert.Equal(4433, walkedWorld2 |> Map.filter (fun _ v -> match v with | Visited _ -> true | _ -> false) |> Map.count)
+        Assert.Equal(4433, walkedWorld2 |> Map.filter (fun _ v ->  match v with | Visited _ -> true | _ -> false) |> Map.count)
 
 module Program = let [<EntryPoint>] main _ = 0
