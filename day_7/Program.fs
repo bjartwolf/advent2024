@@ -22,6 +22,7 @@ module Input =
                     | [] -> yield res
                     | h::t -> yield! possibleValuesInner (res + h ) (num, t)
                               yield! possibleValuesInner (res * h ) (num, t)
+                              yield! possibleValuesInner (Int64.Parse(res.ToString() + h.ToString()) ) (num, t)
             ]
         possibleValuesInner (List.head nums) (num, List.tail nums)
 
@@ -50,7 +51,7 @@ module Input =
     let test2 () = 
         let input = readInit "input1.txt" 
         Assert.Equal(9, input.Length) 
-        Assert.Equal(3749L, sumOfSolutions input) 
+        Assert.Equal(11387L, sumOfSolutions input) 
         let input2 = readInit "input2.txt" 
         Assert.Equal(3749L, sumOfSolutions input2) 
 
