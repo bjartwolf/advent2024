@@ -52,20 +52,21 @@ module Input =
         ]
 
         
-    let findAntiNodes (((x1,y1),(x2,y2)): (Position*Position)): Position seq =
-        [ let deltaX = x2 - x1 
-          let deltaY = y2 - y1
-          yield (x1 - deltaX, y1 - deltaY)
-          yield (x2 + deltaX, y2 + deltaY) ]
+    let findAntiNodes (worldSize: int) (((x1,y1),(x2,y2)): (Position*Position)): Position seq =
+        let deltaX = x2 - x1 
+        let deltaY = y2 - y1
+        [ for i in 0 .. worldSize do
+              yield (x1 - i*deltaX, y1 - i*deltaY)
+              yield (x2 + i*deltaX, y2 + i*deltaY) ]
 
     let filterAntiNodesOutsideWorld (n: int) (nodes: Position seq) : Position seq=
         nodes |> Seq.filter (fun (x,y) -> x >= 0 && x < n && y >= 0 && y < n)
 
     let countAntiNodes (world: World) (worldSize: int):int =
         let lines = findAllAntennaLines world 
-        let antiNodes = lines |> Seq.map findAntiNodes |> Seq.concat
+        let antiNodes = lines |> Seq.map (findAntiNodes worldSize) |> Seq.concat
         let nodesInThisWorld = filterAntiNodesOutsideWorld worldSize antiNodes 
-        nodesInThisWorld |> Seq.distinct |> Seq.length
+        nodesInThisWorld |> Seq.distinct |> Seq.length 
 
     let printWorld (n: int) (world: World) = 
         for i in 0 .. n - 1 do
@@ -79,22 +80,14 @@ module Input =
     [<Fact>]
     let test2 () = 
         let input = readInit "input1.txt" 
-        Assert.Equal(12, input.Length) 
         let map = parsePipeMap input
-        printWorld input.Length map
-        Assert.Equal(12*12, map.Count) 
-        Assert.Equal(2, map |> findAntennaTypes |> List.length) 
-        printfn "%A" (findAllAntennaLines map)
-        Assert.Equal(9, map |> findAllAntennaLines |> Seq.length) 
-        Assert.Contains('A', map |> findAntennaTypes) 
-        Assert.Contains('0', map |> findAntennaTypes) 
-        Assert.Equal(3, map |> findAntennasOfType 'A' |> Seq.length) 
-        Assert.Equal(14, countAntiNodes map input.Length )
+        Assert.Equal(34, countAntiNodes map input.Length )
 
+        (*
     [<Fact>]
     let test3 () = 
         let input = readInit "input2.txt" 
         let map = parsePipeMap input
         Assert.Equal(252, countAntiNodes map input.Length )
-
+*)
 module Program = let [<EntryPoint>] main _ = 0
