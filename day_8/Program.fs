@@ -1,6 +1,5 @@
 module Input =
     open System
-    open System.IO
     open Xunit 
 
     type Position = int * int
