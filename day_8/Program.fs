@@ -32,7 +32,6 @@ module Input =
               |> Seq.distinct
               |> Seq.toList
 
-
     let printWorld (n: int) (world: World) = 
         for i in 0 .. n - 1 do
             for j in 0 .. n - 1 do
@@ -50,5 +49,7 @@ module Input =
         printWorld input.Length map
         Assert.Equal(12*12, map.Count) 
         Assert.Equal(2, map |> findAntennaTypes |> List.length) 
+        Assert.Contains('A', map |> findAntennaTypes) 
+        Assert.Contains('0', map |> findAntennaTypes) 
 
 module Program = let [<EntryPoint>] main _ = 0
