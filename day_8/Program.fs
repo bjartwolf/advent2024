@@ -83,11 +83,9 @@ module Input =
         let map = parsePipeMap input
         Assert.Equal(34, countAntiNodes map input.Length )
 
-        (*
     [<Fact>]
     let test3 () = 
         let input = readInit "input2.txt" 
         let map = parsePipeMap input
-        Assert.Equal(252, countAntiNodes map input.Length )
-*)
+        Assert.Equal(839, countAntiNodes map input.Length )
 module Program = let [<EntryPoint>] main _ = 0
