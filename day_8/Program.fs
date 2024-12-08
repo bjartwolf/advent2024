@@ -26,16 +26,30 @@ module Input =
               |> Seq.filter (fun (pos,tile) -> match tile with | Some c -> true | _ -> false) 
               |> Seq.map (fun (pos,tile) -> match tile with | Some c -> c | _ -> failwith "should only be antennas") 
 
-    let findAntennasOfType (antenna: char) (world: World) : char seq = 
+    let findAntennasOfType (antenna: char) (world: World) : Position seq = 
         world |> Map.toSeq
               |> Seq.filter (fun (pos,tile) -> match tile with | Some c -> c = antenna| _ -> false) 
-              |> Seq.map (fun (pos,tile) -> match tile with | Some c -> c | _ -> failwith "should only be antennas") 
+              |> Seq.map (fun (pos,tile) -> match tile with | Some c -> pos | _ -> failwith "should only be antennas") 
 
 
     let findAntennaTypes (world: World): char list = 
         world |> findAntennas 
               |> Seq.distinct
               |> Seq.toList
+
+    let findAllPairs (input: Position list): (Position*Position) list =
+        List.allPairs input input
+            |> List.filter (fun ((pos1,pos2)) -> pos1 <> pos2)
+            |> List.distinctBy (fun (pos1,pos2) -> if pos1 < pos2 then (pos1,pos2) else (pos2,pos1))
+
+    let findAllAntennaLines (world: World): (Position*Position) seq  = 
+        let types = world |> findAntennaTypes
+        [
+            for antennaType in types do
+                let positions = findAntennasOfType antennaType world
+                let pairs = findAllPairs (Seq.toList positions)
+                yield! pairs 
+        ]
 
     let printWorld (n: int) (world: World) = 
         for i in 0 .. n - 1 do
@@ -54,6 +68,7 @@ module Input =
         printWorld input.Length map
         Assert.Equal(12*12, map.Count) 
         Assert.Equal(2, map |> findAntennaTypes |> List.length) 
+        Assert.Equal(9, map |> findAllAntennaLines |> Seq.length) 
         Assert.Contains('A', map |> findAntennaTypes) 
         Assert.Contains('0', map |> findAntennaTypes) 
         Assert.Equal(3, map |> findAntennasOfType 'A' |> Seq.length) 
