@@ -4,7 +4,7 @@ module Input =
     open Xunit 
 
     type Position = int * int
-    type Tile = Empty | Antenna of char 
+    type Tile = char option 
     type World = Map<Position, Tile>
 
     let readInit (filePath: string): string [] = 
@@ -17,16 +17,28 @@ module Input =
                 for charIndex in 0 .. (chars.Length - 1) do
                     let char = chars[charIndex]
                     match char with 
-                          | '.' -> yield  ((i,charIndex),Empty)
-                          | antenna -> yield  ((i,charIndex), Antenna antenna)
+                          | '.' -> yield  ((i,charIndex),None)
+                          | antenna -> yield  ((i,charIndex), Some antenna)
         ] |> Map.ofList
+
+    let findAntennas (world: World): char seq = 
+        world |> Map.toSeq
+              |> Seq.filter (fun (pos,tile) -> match tile with | Some c -> true | _ -> false) 
+              |> Seq.map (fun (pos,tile) -> match tile with | Some c -> c | _ -> failwith "should only be antennas") 
+
+
+    let findAntennaTypes (world: World): char list = 
+        world |> findAntennas 
+              |> Seq.distinct
+              |> Seq.toList
+
 
     let printWorld (n: int) (world: World) = 
         for i in 0 .. n - 1 do
             for j in 0 .. n - 1 do
                 match world.TryFind((i,j)) with
-                | Some Empty -> printf "."
-                | Some (Antenna a) -> printf "%c" a
+                | Some None -> printf "."
+                | Some (Some a) -> printf "%c" a
                 | None -> failwith "oops" 
             printfn ""
 
@@ -37,5 +49,6 @@ module Input =
         let map = parsePipeMap input
         printWorld input.Length map
         Assert.Equal(12*12, map.Count) 
+        Assert.Equal(2, map |> findAntennaTypes |> List.length) 
 
 module Program = let [<EntryPoint>] main _ = 0
