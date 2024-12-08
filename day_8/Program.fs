@@ -26,6 +26,11 @@ module Input =
               |> Seq.filter (fun (pos,tile) -> match tile with | Some c -> true | _ -> false) 
               |> Seq.map (fun (pos,tile) -> match tile with | Some c -> c | _ -> failwith "should only be antennas") 
 
+    let findAntennasOfType (antenna: char) (world: World) : char seq = 
+        world |> Map.toSeq
+              |> Seq.filter (fun (pos,tile) -> match tile with | Some c -> c = antenna| _ -> false) 
+              |> Seq.map (fun (pos,tile) -> match tile with | Some c -> c | _ -> failwith "should only be antennas") 
+
 
     let findAntennaTypes (world: World): char list = 
         world |> findAntennas 
@@ -51,5 +56,6 @@ module Input =
         Assert.Equal(2, map |> findAntennaTypes |> List.length) 
         Assert.Contains('A', map |> findAntennaTypes) 
         Assert.Contains('0', map |> findAntennaTypes) 
+        Assert.Equal(3, map |> findAntennasOfType 'A' |> Seq.length) 
 
 module Program = let [<EntryPoint>] main _ = 0
