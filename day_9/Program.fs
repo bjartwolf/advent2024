@@ -90,11 +90,11 @@ module Input =
                              | err -> 
 //                                printfn "%A %A %A" i numberOfDots foundSlice 
                                 printfn "Error: %A" err.Message
-                          if numberOfDots > 0 then
-                              i <- i + numberOfDots
+                          if found then
+                              i <- i + 1//numberOfDots//foundSlice.Length 
                           else 
                               i <- i + 1
-            printPatternA result |> printfn " RES %A" 
+            printPatternA result |> printfn " RES   %A" 
             printPatternA inputArray |> printfn " input %A" 
         result |> Array.toList
 
