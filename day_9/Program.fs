@@ -30,18 +30,6 @@ module Input =
     let printCompact (input: int list): string = 
         input |> List.map (fun x -> match x with | x -> string x) |> String.concat ""
 
-    let rec fixTails (input: (int option) list): (int option) list =
-        if (List.isEmpty input) then
-           [] 
-        else 
-            let last = List.last input
-            if (last = None) then
-                let newList = List.removeAt (input.Length - 1) input
-                fixTails newList
-            else 
-                input
-
-
     // can make this list shorter
     // can perhaps make in an arry
     let compact (input: (int option) list) : int list =
@@ -56,25 +44,7 @@ module Input =
                               result.[i] <- inputArray.[indexOfNum.Value].Value
                               inputArray.[indexOfNum.Value] <- None
         result[0 .. numberOfNums - 1] |> Array.toList
-        (*
-        match input with 
-            | [] -> []
-            | [Some h] -> [h] 
-            | Some h :: t -> h :: compact t 
-            | [None] -> []
-            | None :: t -> 
-//                printPattern t |> printfn "%A" 
-                let list = fixTails t 
-                if List.isEmpty list then [] 
-                else
-                    let newList = List.removeAt (list.Length - 1) t
-                    let last = List.last list
-                    match last with 
-                        | Some x -> 
-                            x :: compact newList 
-                        | None -> 
-                            compact newList 
-    *)
+
     let sumIndexed (input: int list) : int64 =
         input |> List.mapi (fun i x -> int64 (i * x)) |> List.sum
 
