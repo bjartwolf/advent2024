@@ -21,12 +21,34 @@ module Input =
     let printPattern (input: int option list): string = 
         input |> List.map (fun x -> match x with | Some x -> string x | None -> ".") |> String.concat ""
 
+    let printCompact (input: int list): string = 
+        input |> List.map (fun x -> match x with | x -> string x) |> String.concat ""
+
+
+    // can make this list shorter
+    // can perhaps make in an arry
+    let rec compact (input: (int option) list) : int list =
+        match input with 
+            | [] -> []
+            | Some h :: t -> h :: compact t 
+            | [None] -> []
+            | None :: t -> 
+                let last = List.last t
+                let newList = List.removeAt (t.Length - 1) t
+                match last with 
+                    | Some x -> x :: compact newList 
+                    | None -> compact newList 
+    
+
     [<Fact>]
     let test3 () =
         let pattern = example |> parseInput |> expandPattern 
         Assert.Equivalent("0..111....22222", pattern |> printPattern) 
         let pattern = "input1.txt" |> readInit |> parseInput |> expandPattern 
         Assert.Equivalent("00...111...2...333.44.5555.6666.777.888899", pattern |> printPattern) 
+
+        let compacted = example |> parseInput |> expandPattern |> compact
+        Assert.Equal("022111222", compacted |> printCompact)
 
     [<Fact>]
     let test2 () = 
