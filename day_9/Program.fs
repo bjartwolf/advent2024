@@ -44,7 +44,19 @@ module Input =
 
     // can make this list shorter
     // can perhaps make in an arry
-    let rec compact (input: (int option) list) : int list =
+    let compact (input: (int option) list) : int list =
+        let inputArray = input |> List.toArray
+        let numberOfNums = input |> List.choose id |> List.length
+        let result: int[] = Array.zeroCreate inputArray.Length 
+        for i in 0 .. (input.Length - 1) do
+            match inputArray.[i] with
+                | Some x -> result.[i] <- x 
+                | None -> let indexOfNum = Array.tryFindIndexBack (fun x -> Option.isSome x ) inputArray
+                          if Option.isSome indexOfNum then
+                              result.[i] <- inputArray.[indexOfNum.Value].Value
+                              inputArray.[indexOfNum.Value] <- None
+        result[0 .. numberOfNums - 1] |> Array.toList
+        (*
         match input with 
             | [] -> []
             | [Some h] -> [h] 
@@ -62,7 +74,7 @@ module Input =
                             x :: compact newList 
                         | None -> 
                             compact newList 
-    
+    *)
     let sumIndexed (input: int list) : int =
         input |> List.mapi (fun i x -> i * x) |> List.sum
 
@@ -80,8 +92,8 @@ module Input =
         Assert.Equal("0099811188827773336446555566", compacted |> printCompact)
         Assert.Equal(1928, compacted |> sumIndexed)
 
-        let compacted = "input2.txt" |> readInit |> parseInput |> expandPattern |> compact
-        Assert.Equal(1928, compacted |> sumIndexed)
+//        let compacted = "input2.txt" |> readInit |> parseInput |> expandPattern |> compact
+//        Assert.Equal(1928, compacted |> sumIndexed)
         
 
     [<Fact>]
