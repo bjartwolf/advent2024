@@ -75,7 +75,7 @@ module Input =
                                             inputArray.[i - requiredDots + 1 .. i] <- dotsArray
                                             i <- i - xs.Length 
                             | None -> i <- i - xs.Length 
-            printPatternA inputArray |> printfn " input %A" 
+//            printPatternA inputArray |> printfn " input %A" 
         inputArray |> Array.toList
 
 
