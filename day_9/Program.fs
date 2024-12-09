@@ -9,14 +9,20 @@ module Input =
     let parseInput (input: string): int list =
         input |> Seq.toList|> Seq.map (fun c -> int c - int '0' ) |> Seq.toList
 
+    let expandPattern (input: int list) : (int option) list =
+        let mutable result = []
+        let mutable idNr = 0
+        let mutable i = 0
 
-    let expandPattern (input: int list) : (int option) list = 
-        let rec expand (input: int list) (idNr: int) = 
-            match input with
-            | [] -> [] 
-            | file::block::xs -> List.replicate file (Some idNr) @  (List.replicate block None) @ expand xs (idNr + 1)
-            | file::[] -> List.replicate file (Some idNr) 
-        expand input 0
+        while i < List.length input do
+            if i % 2 = 0 then
+                result <- result @ List.replicate (List.item i input) (Some idNr)
+                idNr <- idNr + 1
+            else
+                result <- result @ List.replicate (List.item i input) None
+            i <- i + 1
+
+        result
 
     let printPattern (input: int option list): string = 
         input |> List.map (fun x -> match x with | Some x -> string x | None -> ".") |> String.concat ""
@@ -45,7 +51,7 @@ module Input =
             | Some h :: t -> h :: compact t 
             | [None] -> []
             | None :: t -> 
-                printPattern t |> printfn "%A" 
+//                printPattern t |> printfn "%A" 
                 let list = fixTails t 
                 if List.isEmpty list then [] 
                 else
@@ -57,6 +63,8 @@ module Input =
                         | None -> 
                             compact newList 
     
+    let sumIndexed (input: int list) : int =
+        input |> List.mapi (fun i x -> i * x) |> List.sum
 
     [<Fact>]
     let test3 () =
@@ -70,7 +78,10 @@ module Input =
 
         let compacted = "input1.txt" |> readInit |> parseInput |> expandPattern |> compact
         Assert.Equal("0099811188827773336446555566", compacted |> printCompact)
+        Assert.Equal(1928, compacted |> sumIndexed)
 
+        let compacted = "input2.txt" |> readInit |> parseInput |> expandPattern |> compact
+        Assert.Equal(1928, compacted |> sumIndexed)
         
 
     [<Fact>]
@@ -88,4 +99,11 @@ module Input =
     // 1 3 5 -> 0 111 222222(5)
 
 
-module Program = let [<EntryPoint>] main _ = 0
+module Program = 
+    open Input
+    let [<EntryPoint>] main _ = 
+        printfn "Hei"
+        let compacted = "input2.txt" |> readInit |> parseInput |> expandPattern  |> compact
+        printfn "%A" (compacted |> sumIndexed)
+        System.Console.ReadKey() |> ignore
+        0
