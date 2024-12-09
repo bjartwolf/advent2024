@@ -25,7 +25,8 @@ module Input =
     let test3 () =
         let pattern = example |> parseInput |> expandPattern 
         Assert.Equivalent("0..111....22222", pattern |> printPattern) 
-
+        let pattern = "input1.txt" |> readInit |> parseInput |> expandPattern 
+        Assert.Equivalent("00...111...2...333.44.5555.6666.777.888899", pattern |> printPattern) 
 
     [<Fact>]
     let test2 () = 
