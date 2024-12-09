@@ -24,20 +24,38 @@ module Input =
     let printCompact (input: int list): string = 
         input |> List.map (fun x -> match x with | x -> string x) |> String.concat ""
 
+    let rec fixTails (input: (int option) list): (int option) list =
+        if (List.isEmpty input) then
+           [] 
+        else 
+            let last = List.last input
+            if (last = None) then
+                let newList = List.removeAt (input.Length - 1) input
+                fixTails newList
+            else 
+                input
+
 
     // can make this list shorter
     // can perhaps make in an arry
     let rec compact (input: (int option) list) : int list =
         match input with 
             | [] -> []
+            | [Some h] -> [h] 
             | Some h :: t -> h :: compact t 
             | [None] -> []
             | None :: t -> 
-                let last = List.last t
-                let newList = List.removeAt (t.Length - 1) t
-                match last with 
-                    | Some x -> x :: compact newList 
-                    | None -> compact newList 
+                printPattern t |> printfn "%A" 
+                let list = fixTails t 
+                if List.isEmpty list then [] 
+                else
+                    let newList = List.removeAt (list.Length - 1) t
+                    let last = List.last list
+                    match last with 
+                        | Some x -> 
+                            x :: compact newList 
+                        | None -> 
+                            compact newList 
     
 
     [<Fact>]
@@ -49,6 +67,11 @@ module Input =
 
         let compacted = example |> parseInput |> expandPattern |> compact
         Assert.Equal("022111222", compacted |> printCompact)
+
+        let compacted = "input1.txt" |> readInit |> parseInput |> expandPattern |> compact
+        Assert.Equal("0099811188827773336446555566", compacted |> printCompact)
+
+        
 
     [<Fact>]
     let test2 () = 
