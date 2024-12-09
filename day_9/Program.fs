@@ -75,8 +75,8 @@ module Input =
                         | None -> 
                             compact newList 
     *)
-    let sumIndexed (input: int list) : int =
-        input |> List.mapi (fun i x -> i * x) |> List.sum
+    let sumIndexed (input: int list) : int64 =
+        input |> List.mapi (fun i x -> int64 (i * x)) |> List.sum
 
     [<Fact>]
     let test3 () =
@@ -90,7 +90,7 @@ module Input =
 
         let compacted = "input1.txt" |> readInit |> parseInput |> expandPattern |> compact
         Assert.Equal("0099811188827773336446555566", compacted |> printCompact)
-        Assert.Equal(1928, compacted |> sumIndexed)
+        Assert.Equal(1928L, compacted |> sumIndexed)
 
 //        let compacted = "input2.txt" |> readInit |> parseInput |> expandPattern |> compact
 //        Assert.Equal(1928, compacted |> sumIndexed)
