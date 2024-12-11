@@ -24,16 +24,23 @@ module Input =
                 else 
                     yield num * 2024 
         ]
+    let runGenNTimes (input: int list) (n: int): int list = 
+        let mutable result = input
+        for i in 1..n do
+            result <- runGeneration result
+        result
 
     [<Fact>]
     let runGen () = 
         Assert.Equivalent([253000], runGeneration [125])
         Assert.Equivalent([253000;1;7], runGeneration [125;17])
+        Assert.Equivalent([253;0;2024;14168], runGeneration [125;17] |> runGeneration)
  
     [<Fact>]
     let test2 () = 
         let input = readInit "input1.txt" 
         Assert.Equal(2, input.Length) 
+        Assert.Equivalent([2097446912;14168;4048;2;0;2;4;40;48;2024;40;48;80;96;2;8;6;7;6;0;3;2], runGenNTimes input 6)
 
         let input = readInit "input2.txt" 
         Assert.Equal(8, input.Length) 
