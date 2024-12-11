@@ -1,3 +1,5 @@
+open System.Collections.Generic
+
 module Input =
     open System
     open System.IO
@@ -28,35 +30,6 @@ module Input =
                 | e -> printfn "Error: %A" e.Message
         ]
     // før eller siden blir alle tallene 0 igjen og da utvikler de seg i et mønster 
-    let runGenerationN (input: int64 list) (gen: int): (int64*int option) list = 
-        [
-            try 
-                for num in input do
-                    if num = 0 then
-                        yield (1, Some (gen - 1))
-                    else if num.ToString().Length % 2 = 0 then
-                        let numStr = num.ToString()
-                        let half =numStr.Length / 2
-//                        printfn "num: %A halfLeng %A length %A" numStr half numStr.Length
-                        let firstHalf = numStr.Substring(0, half)
-                        let secondHalf = numStr.Substring(half,  half)
- //                       printfn "firstHalf: %A secondHalf: %A" firstHalf secondHalf
-                        let first = firstHalf |> int64
-                        let second = secondHalf |> int64
-                        if (first = 0) then 
-                            yield (0, Some gen)
-                        else 
-                            yield (first, None)
-                        if (second= 0) then 
-                            yield (0, Some gen)
-                        else 
-                            yield (second, None)
-                     else 
-                        yield (num * 2024L, None)
-            with 
-                | e -> printfn "Error: %A" e.Message
-        ]
-
     let runGenNTimes (input: int64 list) (n: int): int64 list = 
         let mutable result = input
         let mutable prevGen = 1
@@ -71,18 +44,24 @@ module Input =
 
     let runGenNTimesN (input: int64 list) (n: int): int64 list = 
         let mutable result = input
-        let mutable reachedZero: int list = [] 
-        let mutable prevGen = 1
-        for i in 1..n do
+        let mutable seenAtGeneration: Dictionary<int64,(int [])> = Dictionary<int64, int[]> ()
+        for i in 0..n do
             //printfn "Generation %A is %A with diff %A " (i-1) result.Length (result.Length - prevGen)
-//            printfn "Generation %A is %A " (i-1) result.Length 
-            prevGen <- result.Length
-            let nextRes  = runGenerationN result i 
-            let nextGen = nextRes |> List.map fst
-            let newZeros = nextRes |> List.map snd |> List.choose id 
-            result <- nextGen |> List.filter (fun x -> x <>0)
-            reachedZero <- reachedZero @ newZeros
-            printfn "Generation %A is %A and reached zero is %A" (i-1) result.Length reachedZero.Length
+            //printfn "Generation %A is %A " (i-1) result.Length 
+            let uniqueNumbers = result |> List.filter (fun x  -> seenAtGeneration.ContainsKey(x) |> not) 
+            for number in result do
+                let seen, generation = seenAtGeneration.TryGetValue(number)
+                if seen then 
+                    let newGen = Array.append generation [|i|]
+                    seenAtGeneration.[number] <- newGen
+                else
+                    seenAtGeneration.[number] <- [|i|]
+
+            let nextRes  = runGeneration uniqueNumbers 
+            result <- nextRes 
+        for num in seenAtGeneration.Keys do
+            let seen, generation = seenAtGeneration.TryGetValue(num)
+            printfn "Number %A was seen at generation %A" num generation
         result
 
 
@@ -109,16 +88,17 @@ open System
 
 module Program = 
     let [<EntryPoint>] main _ = 
-        let input = readInit "input2.txt" 
+        let input = readInit "input1.txt" 
         //let answer = runGenNTimesN input 75 |> List.length
-        let answer = runGenNTimes input 30 |> List.length
-        //printfn "%A" answer
+        let answer = runGenNTimesN input 5 
+        printfn "%A" answer
+        Console.ReadKey() |> ignore
         (*
         let answer = runGenNTimes input 25 |> List.length
         printfn "%A" answer
         *)
 //
-        let input = readInit "input1.txt" 
+//        let input = readInit "input1.txt" 
 //        let answer = runGenNTimes input 25 |> List.length
 //        printfn "%A" answer
 //        let answer = runGenNTimes input 75 |> List.length
