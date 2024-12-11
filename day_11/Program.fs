@@ -33,7 +33,7 @@ module Input =
             try 
                 for num in input do
                     if num = 0 then
-                        yield (1,Some gen)
+                        yield (1, Some (gen - 1))
                     else if num.ToString().Length % 2 = 0 then
                         let numStr = num.ToString()
                         let half =numStr.Length / 2
@@ -41,9 +41,17 @@ module Input =
                         let firstHalf = numStr.Substring(0, half)
                         let secondHalf = numStr.Substring(half,  half)
  //                       printfn "firstHalf: %A secondHalf: %A" firstHalf secondHalf
-                        yield (firstHalf |> int64,None)
-                        yield (secondHalf |> int64,None)
-                    else 
+                        let first = firstHalf |> int64
+                        let second = secondHalf |> int64
+                        if (first = 0) then 
+                            yield (0, Some gen)
+                        else 
+                            yield (first, None)
+                        if (second= 0) then 
+                            yield (0, Some gen)
+                        else 
+                            yield (second, None)
+                     else 
                         yield (num * 2024L, None)
             with 
                 | e -> printfn "Error: %A" e.Message
@@ -53,7 +61,8 @@ module Input =
         let mutable result = input
         let mutable prevGen = 1
         for i in 1..n do
-            //printfn "Generation %A is %A with diff %A " (i-1) result.Length (result.Length - prevGen)
+            printfn "Unique numbers in generation %A is %A" (i-1) (result |> List.distinct |> List.length)
+ //           printfn "Generation %A is %A with diff %A " (i-1) result.Length (result.Length - prevGen)
 //            printfn "Generation %A is %A " (i-1) result.Length 
 //            printfn "Generation %A is %A " (i-1) result
             prevGen <- result.Length
@@ -71,7 +80,7 @@ module Input =
             let nextRes  = runGenerationN result i 
             let nextGen = nextRes |> List.map fst
             let newZeros = nextRes |> List.map snd |> List.choose id 
-            result <- nextGen // |> List.filter (fun x -> x <>0)
+            result <- nextGen |> List.filter (fun x -> x <>0)
             reachedZero <- reachedZero @ newZeros
             printfn "Generation %A is %A and reached zero is %A" (i-1) result.Length reachedZero.Length
         result
@@ -100,18 +109,18 @@ open System
 
 module Program = 
     let [<EntryPoint>] main _ = 
-        let input = readInit "input1.txt" 
-        let answer = runGenNTimesN input 25 |> List.length
-//        let answer = runGenNTimes [1] 30 |> List.length
-        printfn "%A" answer
+        let input = readInit "input2.txt" 
+        //let answer = runGenNTimesN input 75 |> List.length
+        let answer = runGenNTimes input 30 |> List.length
+        //printfn "%A" answer
         (*
         let answer = runGenNTimes input 25 |> List.length
         printfn "%A" answer
-
-        let input = readInit "input2.txt" 
-        let answer = runGenNTimes input 25 |> List.length
-        printfn "%A" answer
+        *)
+//
+        let input = readInit "input1.txt" 
+//        let answer = runGenNTimes input 25 |> List.length
+//        printfn "%A" answer
 //        let answer = runGenNTimes input 75 |> List.length
 //        printfn "%A" answer
-        *)
         0
