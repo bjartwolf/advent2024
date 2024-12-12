@@ -96,32 +96,41 @@ module Input =
                 else
                     fence <- fence + " " 
             printfn "%A" fence 
+    let rec removeAllHorizontalToTheRight ((x,y): Position) (l: Position list) (i: int): Position list =
+        let elementNToRight = l |> List.tryFindIndex (fun (x',y') -> (x',y') = (x,y+i))
+        match elementNToRight with
+            | None -> l
+            | Some index -> removeAllHorizontalToTheRight (x,y) (List.removeAt index l) (i+1) 
+
+    let rec removeAllVerticalDown ((x,y): Position) (l: Position list) (i: int): Position list =
+        let elementNToRight = l |> List.tryFindIndex (fun (x',y') -> (x',y') = (x+i,y))
+        match elementNToRight with
+            | None -> l
+            | Some index -> removeAllVerticalDown (x,y) (List.removeAt index l) (i+1) 
+
+    [<Fact>]
+    let remove () = 
+        Assert.Equivalent([(1,1)], removeAllHorizontalToTheRight (1,1) [(1,1);(2,1);(3,1);(4,1)] 1)
 
     let rabattFences (fences': Position list): Position list= 
         let rec rabattFencesInner (fences: Position list): Position list= 
-            match fences with
-                | [] -> 
-                        []
-                | pos :: rest -> 
-                        //let numberOfFences = fences |> List.filter (fun p -> p = pos) |> List.length
-                        // if 1 over og 1 under eller 1 ved hver side then remove and recursve, else keep and recursve
-                        let x,y = pos
-                        let over = (x, y+1)
-                        let under = (x, y-1)
-                        let right = (x+1, y)
-                        let left = (x-1, y)
-                        let numberOfFencesOver = fences' |> List.filter (fun p -> p = over) |> List.length
-                        let numberOfFencesUnder = fences'|> List.filter (fun p -> p = under) |> List.length
-                        let numberOfFencesRight = fences'|> List.filter (fun p -> p = right) |> List.length
-                        let numberOfFencesLeft= fences' |> List.filter (fun p -> p = left) |> List.length
-                        if ( numberOfFencesUnder > 0 && numberOfFencesOver > 0) then 
-                            rabattFencesInner rest
-                        elif ( numberOfFencesLeft > 0 && numberOfFencesRight > 0) then 
-                            rabattFencesInner rest
-                        else
-                            pos :: rabattFencesInner rest
-//        rabattFencesInner fences'
-        fences'
+            // hvis det er mange på rad så fjerner man alle bortsett fra 1 
+            // kan man bare nulle ut alle som er på rad?
+            // finne vertikale på rad og så ta alle på rad og beholde 1 og så gjøre det samme horisontalt
+            // til slutt er det vel ingen igjen, men man må ta alle på en gang
+            // starte med å finne en som har en under seg og fortsette til det ikke er flere
+            let findConnectedFenceH = fences |> List.filter (fun (x',y') -> List.exists (fun (x,y) -> x = x' && y- y' = 1) fences )  |> List.sort
+            let findConnectedFenceV = fences |> List.filter (fun (x',y') -> List.exists (fun (x,y) -> y = y' && x - x' = 1) fences) |> List.sort
+            match findConnectedFenceH, findConnectedFenceV with
+                | fence1::_,_ -> 
+                    let f = removeAllHorizontalToTheRight fence1 fences 1
+                    rabattFencesInner f 
+                | _,fence1::_t -> 
+                    let f = removeAllVerticalDown fence1 fences 1
+                    rabattFencesInner f 
+                | _ -> fences 
+
+        rabattFencesInner fences'
 
 
     let findFencesCount (region: Region): int =
