@@ -55,16 +55,15 @@ module Input =
                     match tileTypeCurrent with
                         | Some tileType -> 
                             let regionIndex c = regions |> List.tryFindIndex (fun region -> region |> Set.contains (c,tileType) ) // check this for all candiadates
-                            let cs = candidates |> List.map (fun c -> regionIndex c) |> List.choose id
+                            let cs = candidates |> List.map (fun c -> regionIndex c) |> List.choose id |> List.distinct
                             match cs with
                                 | []-> findRegions' restPos (Set.singleton (pos, tileType) :: regions)
+                                | i::j::k::_ -> failwith "three regions"
                                 | i::j:: _ -> // ouch, two regions. must merge then, remove the other from the list
-                                              let newRegion =  regions.[i] |> Set.add (pos,tileType)
                                               let mergedRegions = Set.union regions.[i] regions.[j] 
-                                              // delete region j
-                                              let newRegions = regions |> List.updateAt i mergedRegions 
+                                              let newRegions = regions |> List.updateAt i mergedRegions
                                               let removedRegions = newRegions |> List.removeAt j 
-                                              findRegions' restPos removedRegions 
+                                              findRegions' (pos :: restPos) removedRegions 
                                 | i:: _ -> let newRegion =  regions.[i] |> Set.add (pos,tileType)
                                            let newRegions = regions |> List.updateAt i newRegion
                                            findRegions' restPos newRegions 
@@ -102,7 +101,7 @@ module Input =
 
     [<Fact>]
     let test2 () = 
-        let input = readInit "input0.txt" 
+        let input = readInit "input1.txt" 
 //        printfn "%A" input
         let regions = findRegions input
         printRegions regions 
