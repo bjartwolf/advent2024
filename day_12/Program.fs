@@ -45,9 +45,9 @@ module Input =
                             let cs = candidates |> List.map (fun c -> regionIndex c) |> List.choose id
                             match cs with
                                 | []-> findRegions' restPos (Set.singleton (pos, tileType) :: regions)
-                                | [i:: _] -> let newRegion =  regions.[i] |> Set.add (pos,tileType)
-                                             let newRegions = regions |> List.updateAt i newRegion
-                                             findRegions' restPos newRegions 
+                                | i:: _ -> let newRegion =  regions.[i] |> Set.add (pos,tileType)
+                                           let newRegions = regions |> List.updateAt i newRegion
+                                           findRegions' restPos newRegions 
                         | None -> findRegions' restPos regions 
             | [] -> regions
                  
@@ -60,12 +60,31 @@ module Input =
         findRegions' positions []
     // areal og omkrets
 
+    let printRegions (regions: Regions) =
+        for region in regions do
+            let upperCorner = region |> Seq.maxBy (fun ((x,y),_) -> x*y)
+            let lowerCorner = region |> Seq.minBy (fun ((x,y),_) -> x*y)
+            let ((xmin, ymin),c) = lowerCorner
+            let ((xmax, ymax),_) = upperCorner 
+            printfn "Region %A from xmin %A to ymax %A" c xmin ymax
+            for i in [xmin .. xmax] do
+                for j in [ymin.. ymax] do
+                    if Set.contains ((i,j),c) region then
+                        printf("%A") (c |> string)
+                    else
+                        printf(".")
+                printfn("")
+
+
+
+        ()
+
     [<Fact>]
     let test2 () = 
         let input = readInit "input1.txt" 
 //        printfn "%A" input
-        let findRegions = findRegions input
-        printfn "%A" findRegions
+        let regions = findRegions input
+        printRegions regions 
         Assert.Equal(10, input.Length) 
 
 module Program = let [<EntryPoint>] main _ = 0
