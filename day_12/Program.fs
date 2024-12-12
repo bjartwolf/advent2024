@@ -73,47 +73,11 @@ module Input =
     let cost (region: Region): int = 
         (findNeighborCount region) * (Set.count region)
 
-    let isCorner1InRegion (t:Tile) (region:Region): bool =
+    let isCornerInRegion (t:Tile) (region:Region) (a: int) (b:int): bool =
         let (x,y),c = t
-        let N = (x-1,y) 
-        let W = (x,y-1) 
-        let NW = (x-1,y-1) 
-        if (Set.contains (N,c) region) && (Set.contains (W,c) region) && not (Set.contains (NW,c) region)  then 
-            true 
-        elif not (Set.contains (N,c) region) && not(Set.contains (W,c) region) then
-            true 
-        else
-            false
-
-    let isCorner2InRegion (t:Tile) (region:Region): bool =
-        let (x,y),c = t
-        let N = (x-1,y) 
-        let W = (x,y+1) 
-        let NW = (x-1,y+1) 
-        if (Set.contains (N,c) region) && (Set.contains (W,c) region) && not (Set.contains (NW,c) region)  then 
-            true 
-        elif not (Set.contains (N,c) region) && not(Set.contains (W,c) region) then
-            true 
-        else
-            false
-
-    let isCorner3InRegion (t:Tile) (region:Region): bool =
-        let (x,y),c = t
-        let N = (x+1,y) 
-        let W = (x,y-1) 
-        let NW = (x+1,y-1) 
-        if (Set.contains (N,c) region) && (Set.contains (W,c) region) && not (Set.contains (NW,c) region)  then 
-            true 
-        elif not (Set.contains (N,c) region) && not(Set.contains (W,c) region) then
-            true 
-        else
-            false
-
-    let isCorner4InRegion (t:Tile) (region:Region): bool =
-        let (x,y),c = t
-        let N = (x+1,y) 
-        let W = (x,y+1) 
-        let NW = (x+1,y+1) 
+        let N = (x+a,y) 
+        let W = (x,y+b) 
+        let NW = (x+a,y+b) 
         if (Set.contains (N,c) region) && (Set.contains (W,c) region) && not (Set.contains (NW,c) region)  then 
             true 
         elif not (Set.contains (N,c) region) && not(Set.contains (W,c) region) then
@@ -122,10 +86,10 @@ module Input =
             false
 
     let countInRegionFor (t:Tile) (region:Region): int =
-        let a = if (isCorner1InRegion t region) then 1 else 0
-        let b = if (isCorner2InRegion t region) then 1 else 0
-        let c = if (isCorner3InRegion t region) then 1 else 0
-        let d = if (isCorner4InRegion t region) then 1 else 0
+        let a = if (isCornerInRegion t region 1 -1) then 1 else 0
+        let b = if (isCornerInRegion t region -1 -1) then 1 else 0
+        let c = if (isCornerInRegion t region -1 1) then 1 else 0
+        let d = if (isCornerInRegion t region 1 1) then 1 else 0
         a + b + c + d
 
     let findNrOfCorners (region: Region): int = 
@@ -168,6 +132,6 @@ module Input =
         let input = readInit "input2.txt" 
         let regions = findRegions input
         let cost2 = regions |> List.map cost2 |> List.sum
-        Assert.Equal(140, cost2) 
+        Assert.Equal(830566, cost2) 
 
 module Program = let [<EntryPoint>] main _ = 0
