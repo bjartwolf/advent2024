@@ -41,7 +41,7 @@ module Input =
                     let tileTypeCurrent = tileType input x y 
                     match tileTypeCurrent with
                         | Some tileType -> 
-                            let regionIndex = regions |> List.tryFindIndex (fun region -> region |> Set.contains (pos,tileType) )
+                            let regionIndex = regions |> List.tryFindIndex (fun region -> region |> Set.contains (pos,tileType) ) // check this for all candiadates
                             match regionIndex with
                                 | None -> findRegions' restPos (Set.singleton (pos, tileType) :: regions)
                                 | Some i -> let newRegion =  regions.[i] |> Set.add (pos,tileType)
