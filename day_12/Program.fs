@@ -37,16 +37,17 @@ module Input =
                     let down = (x,y-1) 
                     let right = (x+1,y) 
                     let candidates = [up;left;down;right]
-                    let unScannedCandidates = candidates |> List.filter (fun (x,y) -> not (isScanned input x y))
+//                    let unScannedCandidates = candidates |> List.filter (fun (x,y) -> not (isScanned input x y))
                     let tileTypeCurrent = tileType input x y 
                     match tileTypeCurrent with
                         | Some tileType -> 
-                            let regionIndex = regions |> List.tryFindIndex (fun region -> region |> Set.contains (pos,tileType) ) // check this for all candiadates
-                            match regionIndex with
-                                | None -> findRegions' restPos (Set.singleton (pos, tileType) :: regions)
-                                | Some i -> let newRegion =  regions.[i] |> Set.add (pos,tileType)
-                                            let newRegions = regions |> List.updateAt i newRegion
-                                            findRegions' restPos newRegions 
+                            let regionIndex c = regions |> List.tryFindIndex (fun region -> region |> Set.contains (c,tileType) ) // check this for all candiadates
+                            let cs = candidates |> List.map (fun c -> regionIndex c) |> List.choose id
+                            match cs with
+                                | []-> findRegions' restPos (Set.singleton (pos, tileType) :: regions)
+                                | [i:: _] -> let newRegion =  regions.[i] |> Set.add (pos,tileType)
+                                             let newRegions = regions |> List.updateAt i newRegion
+                                             findRegions' restPos newRegions 
                         | None -> findRegions' restPos regions 
             | [] -> regions
                  
