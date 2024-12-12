@@ -101,7 +101,7 @@ module Input =
 
     [<Fact>]
     let test2 () = 
-        let input = readInit "input1.txt" 
+        let input = readInit "input0.txt" 
 //        printfn "%A" input
         let regions = findRegions input
         printRegions regions 
