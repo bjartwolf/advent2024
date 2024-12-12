@@ -35,6 +35,14 @@ module Input =
         let candidates = [up;left;down;right]
         candidates 
 
+    let findNeighbors (region: Region): Position Set =
+        region |> Set.map (fun (p,_) -> findCandidates p |> Set.ofList) |> Set.unionMany
+
+    let findNeighborCount (region: Region): int =
+        let positionsInSet = region |> Set.map (fun (p,t) -> p)
+        let neighbors = findNeighbors region
+        Set.difference neighbors positionsInSet |> Set.count
+
     let rec findRegions (input: char[][]) : Regions = 
         let rec findRegions' (positionsToScan: Position list)  (regions: Regions) : Regions = 
             match positionsToScan with
@@ -56,7 +64,6 @@ module Input =
                         | None -> findRegions' restPos regions 
             | [] -> regions
                  
-
         let size = input.Length
         let xs = [0..size-1]
         let ys = [0..size-1]
@@ -64,6 +71,8 @@ module Input =
 
         findRegions' positions []
     // areal og omkrets
+    let cost (region: Region): int = 
+        (findNeighbors region |> Set.count) * (Set.count region)
 
     let printRegions (regions: Regions) =
         for region in regions do
@@ -71,14 +80,17 @@ module Input =
             let lowerCorner = region |> Seq.minBy (fun ((x,y),_) -> x*y)
             let ((xmin, ymin),c) = lowerCorner
             let ((xmax, ymax),_) = upperCorner 
-            printfn "Region %A from xmin %A to ymax %A" c xmin ymax
+            //printfn "Region %A from xmin %A to ymax %A" c xmin ymax
+            printfn "Region %A ***" c 
+            printfn "Cost is %A neighbords: %A circ %A" (cost region) (findNeighbors region |> Set.count) (Set.count region)
+                    (*
             for i in [xmin .. xmax] do
                 for j in [ymin.. ymax] do
                     if Set.contains ((i,j),c) region then
                         printf("%A") (c |> string)
                     else
                         printf(".")
-                printfn("")
+*)
         ()
 
     [<Fact>]
