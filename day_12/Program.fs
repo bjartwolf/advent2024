@@ -70,82 +70,14 @@ module Input =
         findNeighborPositions region
             |> List.length
 
-        
-    let findFences (region: Region): Position list = 
-        let fences = findNeighborPositions region
-        fences
-
-    type FencesOnPosition = Position * int
-    let summarizeFences (fences: Position list): FencesOnPosition list = 
-        fences 
-            |> List.groupBy id 
-            |> List.map (fun (p,fs) -> (p,fs.Length))
-
-    let printFences (positions: Position list) =
-        let (_,ymax) = positions |> List.maxBy (fun (x,y) -> y)
-        let (_,ymin) = positions |> List.minBy (fun (x,y) -> y)
-        let (xmax,_) = positions |> List.maxBy (fun (x,y) -> x)
-        let (xmin,_) = positions |> List.minBy (fun (x,y) -> x)
-
-        for i in [xmin .. xmax] do
-            let mutable fence = ""
-            for j in [ymin.. ymax] do
-                let numberOfFences = positions |> List.filter (fun p -> p = (i,j)) |> List.length
-                if List.contains (i,j) positions then
-                    fence <- fence + (sprintf "%d" numberOfFences) 
-                else
-                    fence <- fence + " " 
-            printfn "%A" fence 
-    let rec removeAllHorizontalToTheRight ((x,y): Position) (l: Position list) (i: int): Position list =
-        let elementNToRight = l |> List.tryFindIndex (fun (x',y') -> (x',y') = (x,y+i))
-        match elementNToRight with
-            | None -> l
-            | Some index -> removeAllHorizontalToTheRight (x,y) (List.removeAt index l) (i+1) 
-
-    let rec removeAllVerticalDown ((x,y): Position) (l: Position list) (i: int): Position list =
-        let elementNToRight = l |> List.tryFindIndex (fun (x',y') -> (x',y') = (x+i,y))
-        match elementNToRight with
-            | None -> l
-            | Some index -> removeAllVerticalDown (x,y) (List.removeAt index l) (i+1) 
-
-    [<Fact>]
-    let remove () = 
-        Assert.Equivalent([(1,1)], removeAllHorizontalToTheRight (1,1) [(1,1);(2,1);(3,1);(4,1)] 1)
-
-    let rabattFences (fences': Position list): Position list= 
-        let rec rabattFencesInner (fences: Position list): Position list= 
-            // hvis det er mange på rad så fjerner man alle bortsett fra 1 
-            // kan man bare nulle ut alle som er på rad?
-            // finne vertikale på rad og så ta alle på rad og beholde 1 og så gjøre det samme horisontalt
-            // til slutt er det vel ingen igjen, men man må ta alle på en gang
-            // starte med å finne en som har en under seg og fortsette til det ikke er flere
-            let findConnectedFenceH = fences |> List.filter (fun (x',y') -> List.exists (fun (x,y) -> x = x' && y- y' = 1) fences )  |> List.sort
-            let findConnectedFenceV = fences |> List.filter (fun (x',y') -> List.exists (fun (x,y) -> y = y' && x - x' = 1) fences) |> List.sort
-            match findConnectedFenceH, findConnectedFenceV with
-                | fence1::_,_ -> 
-                    let f = removeAllHorizontalToTheRight fence1 fences 1
-                    rabattFencesInner f 
-                | _,fence1::_t -> 
-                    let f = removeAllVerticalDown fence1 fences 1
-                    rabattFencesInner f 
-                | _ -> fences 
-
-        rabattFencesInner fences'
-
-
-    let findFencesCount (region: Region): int =
-        let fences = findFences region |> rabattFences
-//        "Printing fences" |> printfn "%A"
-//        fences |> printFences 
-//        let vertical = reduceVertical fences|> List.length 
-        fences |> List.length
-
     let cost (region: Region): int = 
         (findNeighborCount region) * (Set.count region)
 
-    let cost2 (region: Region): int = 
-        (findFencesCount region) * (Set.count region)
+    let findNrOfCorners (region: Region): int = 
+        0
 
+    let cost2 (region: Region): int = 
+        (findNrOfCorners region) * (Set.count region)
 
     let printRegions (regions: Regions) =
         for region in regions do
@@ -156,15 +88,11 @@ module Input =
 
             //printfn "Region %A from xmin %A to ymax %A" c xmin ymax
             printfn "Region %A ***"  c
-            printfn "Cost is %A neighbords: %A area %A" (cost2 region) (findFencesCount region ) (Set.count region)
-            let fence = findFences region |> rabattFences 
+            printfn "Cost is %A neighbords: %A area %A" (cost2 region) (findNrOfCorners region ) (Set.count region)
             for i in [xmin-2 .. xmax+2] do
                 let mutable regionStr = ""
                 for j in [ymin-2.. ymax+2] do
-                    let numberOfFences = fence |> List.filter (fun p -> p = (i,j)) |> List.length
-                    if List.contains (i,j) fence then
-                        regionStr <- regionStr + (sprintf "%d" numberOfFences) 
-                    else if Set.contains ((i,j),c) region then
+                    if Set.contains ((i,j),c) region then
                         regionStr <- regionStr + (c |> string) 
                     else
                         regionStr <- regionStr + "." 
