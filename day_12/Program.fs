@@ -1,5 +1,4 @@
 module Input =
-    open System
     open System.IO
     open Xunit 
 
@@ -11,20 +10,9 @@ module Input =
     type Region = Set<Tile>
     type Regions = Region list
 
-    let minChar = 'A' |> int
-    let maxChar = 'Z' |> int
-    let scanned = 'x' |> int
-
-    let isScanned (input: char[][]) (x:int) (y:int) : bool = 
-        if x < 0 || y < 0 || x >= input.Length || y >= input.[0].Length then false
-        else input.[x].[y] |> int = scanned
-
     let tileType (input: char[][]) (x:int) (y:int) : char option = 
         if x < 0 || y < 0 || x >= input.Length || y >= input.[0].Length then None 
         else Some input.[x].[y]  
-
-    let isInScannedRegion (regions: Regions)  ((x,y): Position ): bool = 
-        regions |> List.exists (fun region -> region |> Set.exists (fun ((x',y'),_) -> x = x' && y = y'))
 
     let findCandidates (pos: Position): Position list =
         let (x,y) = pos 
@@ -32,8 +20,7 @@ module Input =
         let left = (x-1,y) 
         let down = (x,y+1) 
         let right = (x+1,y) 
-        let candidates = [up;left;down;right]
-        candidates 
+        [up;left;down;right]
 
     let rec findRegions (input: char[][]) : Regions = 
         let rec findRegions' (positionsToScan: Position list)  (regions: Regions) : Regions = 
@@ -50,7 +37,6 @@ module Input =
                             let cs = candidates |> List.map (fun c -> regionIndex c) |> List.choose id |> List.distinct
                             match cs with
                                 | []-> findRegions' restPos (Set.singleton (pos, tileType) :: regions)
-                                | i::j::k::_ -> failwith "three regions"
                                 | i::j:: _ -> // ouch, two regions. must merge then, remove the other from the list
                                               let mergedRegions = Set.union regions.[i] regions.[j] 
                                               let newRegions = regions |> List.updateAt i mergedRegions
@@ -59,7 +45,6 @@ module Input =
                                 | i:: _ -> let newRegion =  regions.[i] |> Set.add (pos,tileType)
                                            let newRegions = regions |> List.updateAt i newRegion
                                            findRegions' restPos newRegions 
-                        | None -> findRegions' restPos regions 
             | [] -> regions
                  
         let size = input.Length
@@ -68,28 +53,56 @@ module Input =
         let positions = [for x in xs do for y in ys do yield (x,y)]
 
         findRegions' positions []
-    // areal og omkrets
-    let findNeighbors (region: Region): Position Set =
-        region |> Set.map (fun (p,_) -> findCandidates p |> Set.ofList) |> Set.unionMany
 
     let findNeighborsU (region: Region): Position list =
-        let foo = region |> Set.map (fun (p,_) -> findCandidates p |> Set.ofList) |> Set.map (fun x -> x |> Set.toList) |> Set.toList |> List.collect id
-        foo 
+        region 
+            |> Set.map (fun (p,_) -> findCandidates p |> Set.ofList) 
+            |> Set.map (fun x -> x |> Set.toList) 
+            |> Set.toList 
+            |> List.collect id
 
-    let findNeighborCount (region: Region): int =
-        let positionsInSet = region |> Set.map (fun (p,t) -> p)
-        let neighbors = findNeighbors region
-        Set.difference neighbors positionsInSet |> Set.count
-
-    let findNeighborCountU (region: Region): int =
+    let findNeighborPositions (region: Region): Position list =
         let positionsInSet = region |> Set.map (fun (p,t) -> p) |> Set.toList
         let neighbors = findNeighborsU region
-        // remove all elements in positionsInSet from neighbors
-        let foo = neighbors |> List.filter (fun x -> not (positionsInSet |> List.exists (fun y -> y = x)))
-        foo |> List.length
+        neighbors |> List.filter (fun x -> not (positionsInSet |> List.exists (fun y -> y = x)))
+
+    let findNeighborCount (region: Region): int =
+        findNeighborPositions region
+            |> List.length
+        
+    let findFences (region: Region): Position list = 
+        let fences = findNeighborPositions region
+        fences
+
+    let printFences (positions: Position list) =
+        let (_,ymax) = positions |> List.maxBy (fun (x,y) -> y)
+        let (_,ymin) = positions |> List.minBy (fun (x,y) -> y)
+        let (xmax,_) = positions |> List.maxBy (fun (x,y) -> x)
+        let (xmin,_) = positions |> List.minBy (fun (x,y) -> x)
+
+        for i in [xmin .. xmax] do
+            let mutable fence = ""
+            for j in [ymin.. ymax] do
+                let numberOfFences = positions |> List.filter (fun p -> p = (i,j)) |> List.length
+                if List.contains (i,j) positions then
+                    fence <- fence + (sprintf "%d" numberOfFences) 
+                else
+                    fence <- fence + " " 
+            printfn "%A" fence 
+
+    let findFencesCount (region: Region): int =
+        let fences = findFences region
+        "Printing fences" |> printfn "%A"
+        fences |> printFences 
+//        let vertical = reduceVertical fences|> List.length 
+        666 
 
     let cost (region: Region): int = 
-        (findNeighborCountU region) * (Set.count region)
+        (findNeighborCount region) * (Set.count region)
+
+    let cost2 (region: Region): int = 
+        (findFencesCount region) * (Set.count region)
+
 
     let printRegions (regions: Regions) =
         for region in regions do
@@ -100,7 +113,7 @@ module Input =
 
             //printfn "Region %A from xmin %A to ymax %A" c xmin ymax
             printfn "Region %A ***"  c
-            printfn "Cost is %A neighbords: %A area %A" (cost region) (findNeighborCountU region ) (Set.count region)
+            printfn "Cost is %A neighbords: %A area %A" (cost region) (findNeighborCount region ) (Set.count region)
             for i in [xmin .. xmax] do
                 for j in [ymin.. ymax] do
                     if Set.contains ((i,j),c) region then
@@ -112,11 +125,13 @@ module Input =
 
     [<Fact>]
     let test2 () = 
-        let input = readInit "input2.txt" 
+        let input = readInit "input1.txt" 
 //        printfn "%A" input
         let regions = findRegions input
         let cost = regions |> List.map cost |> List.sum
-        printfn "%A" cost
+        let cost2 = regions |> List.map cost2 |> List.sum
+        Assert.Equal(1930, cost)
+//        Assert.Equal(1260, cost2)
 //        printRegions regions 
 //        Assert.Equal(10, input.Length) 
 
