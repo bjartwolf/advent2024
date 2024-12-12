@@ -114,13 +114,15 @@ module Input =
             //printfn "Region %A from xmin %A to ymax %A" c xmin ymax
             printfn "Region %A ***"  c
             printfn "Cost is %A neighbords: %A area %A" (cost region) (findNeighborCount region ) (Set.count region)
+
+            let mutable regionStr = ""
             for i in [xmin .. xmax] do
                 for j in [ymin.. ymax] do
                     if Set.contains ((i,j),c) region then
-                        printf("%A") (c |> string)
+                        regionStr <- regionStr + (c |> string) 
                     else
-                        printf(".")
-                printfn ""
+                        regionStr <- regionStr + "." 
+                printfn "%A" regionStr
         ()
 
     [<Fact>]
@@ -132,7 +134,7 @@ module Input =
 //        let cost2 = regions |> List.map cost2 |> List.sum
         Assert.Equal(1930, cost)
 //        Assert.Equal(1260, cost2)
-//        printRegions regions 
+        printRegions regions 
 //        Assert.Equal(10, input.Length) 
 
 module Program = let [<EntryPoint>] main _ = 0
