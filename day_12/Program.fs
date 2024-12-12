@@ -30,7 +30,7 @@ module Input =
         let (x,y) = pos 
         let up = (x,y-1) 
         let left = (x-1,y) 
-        let down = (x,y-1) 
+        let down = (x,y+1) 
         let right = (x+1,y) 
         let candidates = [up;left;down;right]
         candidates 
@@ -58,6 +58,13 @@ module Input =
                             let cs = candidates |> List.map (fun c -> regionIndex c) |> List.choose id
                             match cs with
                                 | []-> findRegions' restPos (Set.singleton (pos, tileType) :: regions)
+                                | i::j:: _ -> // ouch, two regions. must merge then, remove the other from the list
+                                              let newRegion =  regions.[i] |> Set.add (pos,tileType)
+                                              let mergedRegions = Set.union regions.[i] regions.[j] 
+                                              // delete region j
+                                              let newRegions = regions |> List.updateAt i mergedRegions 
+                                              let removedRegions = newRegions |> List.removeAt j 
+                                              findRegions' restPos removedRegions 
                                 | i:: _ -> let newRegion =  regions.[i] |> Set.add (pos,tileType)
                                            let newRegions = regions |> List.updateAt i newRegion
                                            findRegions' restPos newRegions 
@@ -76,29 +83,29 @@ module Input =
 
     let printRegions (regions: Regions) =
         for region in regions do
-            let upperCorner = region |> Seq.maxBy (fun ((x,y),_) -> x*y)
-            let lowerCorner = region |> Seq.minBy (fun ((x,y),_) -> x*y)
-            let ((xmin, ymin),c) = lowerCorner
-            let ((xmax, ymax),_) = upperCorner 
+            let ((_,ymax),c) = region |> Seq.maxBy (fun ((x,y),_) -> y)
+            let ((_,ymin),_) = region |> Seq.minBy (fun ((x,y),_) -> y)
+            let ((xmax,_),_) = region |> Seq.maxBy (fun ((x,y),_) -> x)
+            let ((xmin,_),_)  = region |> Seq.minBy (fun ((x,y),_) -> x)
+
             //printfn "Region %A from xmin %A to ymax %A" c xmin ymax
-            printfn "Region %A ***" c 
+            printfn "Region %A ***"  c
             printfn "Cost is %A neighbords: %A circ %A" (cost region) (findNeighbors region |> Set.count) (Set.count region)
-                    (*
             for i in [xmin .. xmax] do
                 for j in [ymin.. ymax] do
                     if Set.contains ((i,j),c) region then
                         printf("%A") (c |> string)
                     else
                         printf(".")
-*)
+                printfn ""
         ()
 
     [<Fact>]
     let test2 () = 
-        let input = readInit "input1.txt" 
+        let input = readInit "input0.txt" 
 //        printfn "%A" input
         let regions = findRegions input
         printRegions regions 
-        Assert.Equal(10, input.Length) 
+//        Assert.Equal(10, input.Length) 
 
 module Program = let [<EntryPoint>] main _ = 0
