@@ -106,7 +106,7 @@ module Input =
 
     let printRegions (regions: Regions) =
         for region in regions do
-            let ((_,ymax),c) = region |> Seq.maxBy (fun ((x,y),_) -> y)
+            let ((_,ymax),c) = region |> Seq.maxBy (fun ((x,y),_) -> y) 
             let ((_,ymin),_) = region |> Seq.minBy (fun ((x,y),_) -> y)
             let ((xmax,_),_) = region |> Seq.maxBy (fun ((x,y),_) -> x)
             let ((xmin,_),_)  = region |> Seq.minBy (fun ((x,y),_) -> x)
@@ -114,11 +114,14 @@ module Input =
             //printfn "Region %A from xmin %A to ymax %A" c xmin ymax
             printfn "Region %A ***"  c
             printfn "Cost is %A neighbords: %A area %A" (cost region) (findNeighborCount region ) (Set.count region)
-
-            let mutable regionStr = ""
-            for i in [xmin .. xmax] do
-                for j in [ymin.. ymax] do
-                    if Set.contains ((i,j),c) region then
+            let fence = findFences region
+            for i in [xmin-2 .. xmax+2] do
+                let mutable regionStr = ""
+                for j in [ymin-2.. ymax+2] do
+                    let numberOfFences = fence |> List.filter (fun p -> p = (i,j)) |> List.length
+                    if List.contains (i,j) fence then
+                        regionStr <- regionStr + (sprintf "%d" numberOfFences) 
+                    else if Set.contains ((i,j),c) region then
                         regionStr <- regionStr + (c |> string) 
                     else
                         regionStr <- regionStr + "." 
