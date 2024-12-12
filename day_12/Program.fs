@@ -69,10 +69,17 @@ module Input =
     let findNeighborCount (region: Region): int =
         findNeighborPositions region
             |> List.length
+
         
     let findFences (region: Region): Position list = 
         let fences = findNeighborPositions region
         fences
+
+    type FencesOnPosition = Position * int
+    let summarizeFences (fences: Position list): FencesOnPosition list = 
+        fences 
+            |> List.groupBy id 
+            |> List.map (fun (p,fs) -> (p,fs.Length))
 
     let printFences (positions: Position list) =
         let (_,ymax) = positions |> List.maxBy (fun (x,y) -> y)
@@ -90,12 +97,39 @@ module Input =
                     fence <- fence + " " 
             printfn "%A" fence 
 
+    let rabattFences (fences': Position list): Position list= 
+        let rec rabattFencesInner (fences: Position list): Position list= 
+            match fences with
+                | [] -> 
+                        []
+                | pos :: rest -> 
+                        //let numberOfFences = fences |> List.filter (fun p -> p = pos) |> List.length
+                        // if 1 over og 1 under eller 1 ved hver side then remove and recursve, else keep and recursve
+                        let x,y = pos
+                        let over = (x, y+1)
+                        let under = (x, y-1)
+                        let right = (x+1, y)
+                        let left = (x-1, y)
+                        let numberOfFencesOver = fences' |> List.filter (fun p -> p = over) |> List.length
+                        let numberOfFencesUnder = fences'|> List.filter (fun p -> p = under) |> List.length
+                        let numberOfFencesRight = fences'|> List.filter (fun p -> p = right) |> List.length
+                        let numberOfFencesLeft= fences' |> List.filter (fun p -> p = left) |> List.length
+                        if ( numberOfFencesUnder > 0 && numberOfFencesOver > 0) then 
+                            rabattFencesInner rest
+                        elif ( numberOfFencesLeft > 0 && numberOfFencesRight > 0) then 
+                            rabattFencesInner rest
+                        else
+                            pos :: rabattFencesInner rest
+//        rabattFencesInner fences'
+        fences'
+
+
     let findFencesCount (region: Region): int =
-        let fences = findFences region
-        "Printing fences" |> printfn "%A"
-        fences |> printFences 
+        let fences = findFences region |> rabattFences
+//        "Printing fences" |> printfn "%A"
+//        fences |> printFences 
 //        let vertical = reduceVertical fences|> List.length 
-        666 
+        fences |> List.length
 
     let cost (region: Region): int = 
         (findNeighborCount region) * (Set.count region)
@@ -113,8 +147,8 @@ module Input =
 
             //printfn "Region %A from xmin %A to ymax %A" c xmin ymax
             printfn "Region %A ***"  c
-            printfn "Cost is %A neighbords: %A area %A" (cost region) (findNeighborCount region ) (Set.count region)
-            let fence = findFences region
+            printfn "Cost is %A neighbords: %A area %A" (cost2 region) (findFencesCount region ) (Set.count region)
+            let fence = findFences region |> rabattFences 
             for i in [xmin-2 .. xmax+2] do
                 let mutable regionStr = ""
                 for j in [ymin-2.. ymax+2] do
@@ -134,10 +168,11 @@ module Input =
 //        printfn "%A" input
         let regions = findRegions input
         let cost = regions |> List.map cost |> List.sum
-//        let cost2 = regions |> List.map cost2 |> List.sum
-        Assert.Equal(1930, cost)
-//        Assert.Equal(1260, cost2)
+        let cost2 = regions |> List.map cost2 |> List.sum
         printRegions regions 
+        Assert.Equal(1930, cost)
+        Assert.Equal(1260, cost2)
+
 //        Assert.Equal(10, input.Length) 
 
 module Program = let [<EntryPoint>] main _ = 0
