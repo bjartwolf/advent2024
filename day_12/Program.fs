@@ -54,7 +54,7 @@ module Input =
 
         findRegions' positions []
 
-    let findNeighborsU (region: Region): Position list =
+    let findNeighbors (region: Region): Position list =
         region 
             |> Set.map (fun (p,_) -> findCandidates p |> Set.ofList) 
             |> Set.map (fun x -> x |> Set.toList) 
@@ -63,7 +63,7 @@ module Input =
 
     let findNeighborPositions (region: Region): Position list =
         let positionsInSet = region |> Set.map (fun (p,t) -> p) |> Set.toList
-        let neighbors = findNeighborsU region
+        let neighbors = findNeighbors region
         neighbors |> List.filter (fun x -> not (positionsInSet |> List.exists (fun y -> y = x)))
 
     let findNeighborCount (region: Region): int =
@@ -129,7 +129,7 @@ module Input =
 //        printfn "%A" input
         let regions = findRegions input
         let cost = regions |> List.map cost |> List.sum
-        let cost2 = regions |> List.map cost2 |> List.sum
+//        let cost2 = regions |> List.map cost2 |> List.sum
         Assert.Equal(1930, cost)
 //        Assert.Equal(1260, cost2)
 //        printRegions regions 
