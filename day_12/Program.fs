@@ -26,17 +26,22 @@ module Input =
     let isInScannedRegion (regions: Regions)  ((x,y): Position ): bool = 
         regions |> List.exists (fun region -> region |> Set.exists (fun ((x',y'),_) -> x = x' && y = y'))
 
+    let findCandidates (pos: Position): Position list =
+        let (x,y) = pos 
+        let up = (x,y-1) 
+        let left = (x-1,y) 
+        let down = (x,y-1) 
+        let right = (x+1,y) 
+        let candidates = [up;left;down;right]
+        candidates 
+
     let rec findRegions (input: char[][]) : Regions = 
         let rec findRegions' (positionsToScan: Position list)  (regions: Regions) : Regions = 
             match positionsToScan with
             | pos :: restPos ->  
                     // find candidates around it
                     let (x,y) = pos 
-                    let up = (x,y-1) 
-                    let left = (x-1,y) 
-                    let down = (x,y-1) 
-                    let right = (x+1,y) 
-                    let candidates = [up;left;down;right]
+                    let candidates = findCandidates pos 
 //                    let unScannedCandidates = candidates |> List.filter (fun (x,y) -> not (isScanned input x y))
                     let tileTypeCurrent = tileType input x y 
                     match tileTypeCurrent with
@@ -74,9 +79,6 @@ module Input =
                     else
                         printf(".")
                 printfn("")
-
-
-
         ()
 
     [<Fact>]
