@@ -6,6 +6,8 @@ type Price = { GX: int64; GY: int64}
 type Machine = { A: Button; B: Button; P: Price }
 
 
+let increase:int64 = 10000000000000L
+
 module Input =
     open System
     open System.IO
@@ -44,6 +46,7 @@ module Input =
         let input = readInit "input1.txt" 
         Assert.Equal(4, input.Length) 
         Assert.Equal({ A = { X = 94; Y=34}; B = { X = 22; Y = 67}; P = { GX = 8400; GY = 5400 }} , input.Head) 
+open Input
 
 module Solver =
     type Presses = { PA: int64; PB: int64 }
@@ -66,7 +69,8 @@ module Solver =
     let generatePresses (machine: Machine) (maxPress: int64): Presses seq =
         [
             let pressMachine = PaFromPb machine
-            for j in 0L..maxPress do
+            printfn "%A" machine.A.X
+            for j in 0L..(increase/10L) do
                  let res = pressMachine j 
                  match res with
                     | None -> ()
@@ -85,7 +89,7 @@ module Solver =
             Some cheapest
 
     let solveMachines (machine: Machine list) : ((Presses*int64) option) seq =
-        let maxPresses = 100
+        let maxPresses = increase 
         [ for m in machine do
             match solve m maxPresses with
             | Some x -> yield Some x
@@ -97,8 +101,8 @@ module Solver =
             |> Seq.sumBy(fun (_, c) -> c)
 
     let increaseXY (machine: Machine): Machine =
-        let increase:int64 = 10000000000000L
         { machine with  P = { GX = machine.P.GX + increase; GY = machine.P.GY + increase }}
+open Solver
 
 module Tests =
     open Input
@@ -126,5 +130,10 @@ module Tests =
         let machines = readInit "input2.txt" 
         Assert.Equivalent(36250, costOfAllMachines machines)
 
-
-module Program = let [<EntryPoint>] main _ = 0
+module Program = 
+    let [<EntryPoint>] main _ = 
+        let machines = readInit "input2.txt" 
+        let expensiveMachines = machines //|> List.map increaseXY
+        printfn "answer: %A " (costOfAllMachines expensiveMachines)
+        Console.ReadLine() |> ignore
+        0
