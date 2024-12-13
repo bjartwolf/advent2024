@@ -70,7 +70,18 @@ module Solver =
                     |> Seq.map(fun p -> (p, costP p))
                     |> Seq.minBy (fun (_, c) -> c) 
             Some cheapest
-                    
+
+    let solveMachines (machine: Machine list) : ((Presses*int) option) seq =
+        let maxPresses = 100
+        [ for m in machine do
+            match solve m maxPresses with
+            | Some x -> yield Some x
+            | None -> yield None ]
+
+    let costOfAllMachines (machines: Machine list) : int =
+        solveMachines machines
+            |> Seq.choose(fun x -> x)
+            |> Seq.sumBy(fun (_, c) -> c)
 
 module Tests =
     open Input
@@ -78,10 +89,22 @@ module Tests =
 
     [<Fact>]
     let test2 () = 
-        let input = readInit "input1.txt" 
-        let machine0 = input.[0] 
+        let machines = readInit "input1.txt" 
+        let machine0 = machines.[0] 
         Assert.False(checkPresses machine0 { PA = 1; PB = 1 } )
         Assert.True(checkPresses machine0 { PA = 80; PB = 40 })
         Assert.Equal(280, costP { PA = 80; PB = 40 } )
+        let solutions = solveMachines machines |> Seq.toList
+        Assert.Equivalent(Some ({ PA = 80; PB = 40 }, 280), solutions.[0])
+        Assert.Equivalent(None, solutions.[1])
+        Assert.Equivalent(Some ({ PA = 38; PB = 86 }, 200), solutions.[2])
+        Assert.Equivalent(None, solutions.[3])
+        Assert.Equivalent(480, costOfAllMachines machines)
+
+    [<Fact>]
+    let test3 () = 
+        let machines = readInit "input1.txt" 
+        Assert.Equivalent(480, costOfAllMachines machines)
+
 
 module Program = let [<EntryPoint>] main _ = 0
