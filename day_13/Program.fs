@@ -1,12 +1,14 @@
+open Xunit
+
+type Button = { X: int; Y: int}
+type Price = { GX: int; GY: int}
+type Machine = { A: Button; B: Button; P: Price }
+
+
 module Input =
     open System
     open System.IO
     open Xunit 
-
-    type Button = { X: int; Y: int}
-    type Price = { GX: int; GY: int}
-
-    type Machine = { A: Button; B: Button; P: Price }
 
     let parseButton (line: string): Button =
             let button1 = line.Split("+")
@@ -36,11 +38,50 @@ module Input =
             yield { A = a; B=b; P=c } 
         ] 
 
-
     [<Fact>]
     let test2 () = 
         let input = readInit "input1.txt" 
         Assert.Equal(4, input.Length) 
         Assert.Equal({ A = { X = 94; Y=34}; B = { X = 22; Y = 67}; P = { GX = 8400; GY = 5400 }} , input.Head) 
+
+module Solver =
+    type Presses = { PA: int; PB: int }
+    let checkPresses (machine: Machine) (presses: Presses): bool =
+        (presses.PA*machine.A.X) + (presses.PB*machine.B.X) = machine.P.GX
+        && (presses.PA*machine.A.Y) + (presses.PB*machine.B.Y) = machine.P.GY
+
+    let costP (p: Presses) : int =
+        3*p.PA + p.PB
+
+    let generatePresses (maxPress: int): Presses seq =
+        [
+            for i in 0..maxPress do
+                for j in 0..maxPress do
+                    yield { PA = i; PB = j }
+        ]
+    let solve (machine: Machine) (maxPresses: int) : (Presses*int) option =
+        let checkPressForMachine = checkPresses machine
+        let solutions = generatePresses 100 |> Seq.filter(fun p -> checkPressForMachine p) 
+        if (Seq.isEmpty solutions) then 
+            None
+        else
+            let cheapest = 
+                solutions 
+                    |> Seq.map(fun p -> (p, costP p))
+                    |> Seq.minBy (fun (_, c) -> c) 
+            Some cheapest
+                    
+
+module Tests =
+    open Input
+    open Solver
+
+    [<Fact>]
+    let test2 () = 
+        let input = readInit "input1.txt" 
+        let machine0 = input.[0] 
+        Assert.False(checkPresses machine0 { PA = 1; PB = 1 } )
+        Assert.True(checkPresses machine0 { PA = 80; PB = 40 })
+        Assert.Equal(280, costP { PA = 80; PB = 40 } )
 
 module Program = let [<EntryPoint>] main _ = 0
