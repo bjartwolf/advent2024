@@ -66,9 +66,10 @@ module Solver =
         else
             None
 
-    let foo (machine: Machine) : double = 
-         ((double machine.P.GX-(double machine.P.GY*double machine.B.X/double machine.B.Y)))/(double machine.A.X - ((double machine.A.Y*double machine.B.X)/double machine.B.Y))
-
+    let solveMagic (machine: Machine) : (double*double) = 
+        let a = ((double machine.P.GX-(double machine.P.GY*double machine.B.X/double machine.B.Y)))/(double machine.A.X - ((double machine.A.Y*double machine.B.X)/double machine.B.Y))
+        let b = (double machine.P.GY) / (double machine.B.Y) - a * (double machine.A.Y) / (double machine.B.Y) 
+        (a,b)
 
     let generatePresses (machine: Machine) (maxPress: int64): Presses seq =
         [
@@ -98,14 +99,7 @@ module Solver =
             | Some (solution,cost) -> 
                 printfn "*******"
                 printfn "%A" m
-                let goalRatio = ((m.P.GY |> double) / (m.P.GX |> double))
-                let vecARatio = ((m.A.Y |> double) / (m.A.X |> double))
-                let vecBRatio = ((m.B.Y |> double) / (m.B.X |> double))
-//                printfn "ratio of solution %A  " goalRatio 
-//                printfn "ratio vectors A %A  " vecARatio 
-//                printfn "ratio vectors B %A  " vecBRatio 
-//                printfn "sumratio   %A" sumRatio
-                let magic = foo m 
+                let magic = solveMagic m 
                 printfn "magic %A" magic 
                 printfn "solution %A" solution
                 
