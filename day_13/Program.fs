@@ -66,11 +66,14 @@ module Solver =
         else
             None
 
+    let foo (machine: Machine) : double = 
+         ((double machine.P.GX-(double machine.P.GY*double machine.B.X/double machine.B.Y)))/(double machine.A.X - ((double machine.A.Y*double machine.B.X)/double machine.B.Y))
+
+
     let generatePresses (machine: Machine) (maxPress: int64): Presses seq =
         [
             let pressMachine = PaFromPb machine
-            printfn "%A" machine.A.X
-            for j in 0L..(increase/10L) do
+            for j in 0L..100L do
                  let res = pressMachine j 
                  match res with
                     | None -> ()
@@ -92,8 +95,23 @@ module Solver =
         let maxPresses = increase 
         [ for m in machine do
             match solve m maxPresses with
-            | Some x -> yield Some x
-            | None -> yield None ]
+            | Some (solution,cost) -> 
+                printfn "*******"
+                printfn "%A" m
+                let goalRatio = ((m.P.GY |> double) / (m.P.GX |> double))
+                let vecARatio = ((m.A.Y |> double) / (m.A.X |> double))
+                let vecBRatio = ((m.B.Y |> double) / (m.B.X |> double))
+//                printfn "ratio of solution %A  " goalRatio 
+//                printfn "ratio vectors A %A  " vecARatio 
+//                printfn "ratio vectors B %A  " vecBRatio 
+//                printfn "sumratio   %A" sumRatio
+                let magic = foo m 
+                printfn "magic %A" magic 
+                printfn "solution %A" solution
+                
+                yield Some (solution, cost)
+            | None -> 
+                yield None ]
 
     let costOfAllMachines (machines: Machine list) : int64 =
         solveMachines machines
