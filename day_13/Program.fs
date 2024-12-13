@@ -1,4 +1,5 @@
 open Xunit
+open System
 
 type Button = { X: int; Y: int}
 type Price = { GX: int; GY: int}
@@ -53,15 +54,25 @@ module Solver =
     let costP (p: Presses) : int =
         3*p.PA + p.PB
 
-    let generatePresses (maxPress: int): Presses seq =
+    let PaFromPb (machine: Machine)(Pb: int): Presses option = 
+        let Pa = ((double machine.P.GX-(double machine.P.GY*double machine.B.X/double machine.B.Y)))/(double machine.A.X - ((double machine.A.Y*double machine.B.X)/double machine.B.Y))
+        if Math.Round(Pa) <> Pa then 
+            None
+        else
+            Some { PA = int Pa; PB = Pb  }
+
+    let generatePresses (machine: Machine) (maxPress: int): Presses seq =
         [
-            for i in 0..maxPress do
-                for j in 0..maxPress do
-                    yield { PA = i; PB = j }
+            let pressMachine = PaFromPb machine
+            for j in 0..maxPress do
+                 let res = pressMachine j 
+                 match res with
+                    | None -> ()
+                    | Some res-> res 
         ]
     let solve (machine: Machine) (maxPresses: int) : (Presses*int) option =
         let checkPressForMachine = checkPresses machine
-        let solutions = generatePresses 100 |> Seq.filter(fun p -> checkPressForMachine p) 
+        let solutions = generatePresses machine 100 |> Seq.filter(fun p -> checkPressForMachine p) 
         if (Seq.isEmpty solutions) then 
             None
         else
@@ -70,10 +81,6 @@ module Solver =
                     |> Seq.map(fun p -> (p, costP p))
                     |> Seq.minBy (fun (_, c) -> c) 
             Some cheapest
-
-    let PaFromPb (Pb: int) (machine: Machine): Presses = 
-        let Pa = ((double machine.P.GX-(double machine.P.GY*double machine.B.X/double machine.B.Y)))/(double machine.A.X - ((double machine.A.Y*double machine.B.X)/double machine.B.Y))
-        { PA = int Pa; PB = Pb  }
 
     let solveMachines (machine: Machine list) : ((Presses*int) option) seq =
         let maxPresses = 100
@@ -98,8 +105,8 @@ module Tests =
         Assert.False(checkPresses machine0 { PA = 1; PB = 1 } )
         Assert.True(checkPresses machine0 { PA = 80; PB = 40 })
         Assert.True(checkPresses machines.[2] { PA = 38; PB = 86 })
-        Assert.Equal({PA = 38; PB = 86}, PaFromPb 86 machines.[2])
-        Assert.Equal({PA = 80; PB = 40}, PaFromPb 40 machine0)
+        Assert.Equal(Some {PA = 38; PB = 86}, PaFromPb machines.[2] 86)
+        Assert.Equal(Some {PA = 80; PB = 40}, PaFromPb machine0 40)
         Assert.Equal(280, costP { PA = 80; PB = 40 } )
         let solutions = solveMachines machines |> Seq.toList
         Assert.Equivalent(Some ({ PA = 80; PB = 40 }, 280), solutions.[0])
