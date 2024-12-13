@@ -55,11 +55,13 @@ module Solver =
         3*p.PA + p.PB
 
     let PaFromPb (machine: Machine)(Pb: int): Presses option = 
-        let Pa = ((double machine.P.GX-(double machine.P.GY*double machine.B.X/double machine.B.Y)))/(double machine.A.X - ((double machine.A.Y*double machine.B.X)/double machine.B.Y))
-        if Math.Round(Pa) <> Pa then 
-            None
+        let Pad = ((double machine.P.GX-(double machine.P.GY*double machine.B.X/double machine.B.Y)))/(double machine.A.X - ((double machine.A.Y*double machine.B.X)/double machine.B.Y))
+        let PadRounded = Math.Round(Pad, 5)
+        let epsilon = 1e-5
+        if Math.Abs(Pad - PadRounded) < epsilon then
+            Some { PA = int PadRounded; PB = Pb }
         else
-            Some { PA = int Pa; PB = Pb  }
+            None
 
     let generatePresses (machine: Machine) (maxPress: int): Presses seq =
         [
@@ -105,8 +107,8 @@ module Tests =
         Assert.False(checkPresses machine0 { PA = 1; PB = 1 } )
         Assert.True(checkPresses machine0 { PA = 80; PB = 40 })
         Assert.True(checkPresses machines.[2] { PA = 38; PB = 86 })
-        Assert.Equal(Some {PA = 38; PB = 86}, PaFromPb machines.[2] 86)
         Assert.Equal(Some {PA = 80; PB = 40}, PaFromPb machine0 40)
+        Assert.Equal(Some {PA = 38; PB = 86}, PaFromPb machines.[2] 86)
         Assert.Equal(280, costP { PA = 80; PB = 40 } )
         let solutions = solveMachines machines |> Seq.toList
         Assert.Equivalent(Some ({ PA = 80; PB = 40 }, 280), solutions.[0])
