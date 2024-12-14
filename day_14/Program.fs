@@ -5,9 +5,9 @@ type BoardSize = int*int
 let board1 = (11,7)
 let board2 = (101,103) 
 let printBoard ((boardLength, boardHeight): BoardSize) (robots: Robot list)= 
-    printfn "%A" (robots |> List.length)
-    printfn "Length %A Height %A" boardLength boardHeight 
-    printfn "%A" robots
+//    printfn "%A" (robots |> List.length)
+//    printfn "Length %A Height %A" boardLength boardHeight 
+ //   printfn "%A" robots
     for y in 0..boardHeight-1 do
         for x in 0..boardLength-1 do
             let robotCount = List.filter (fun ((x',y'),_) -> x = x' && y = y') robots |> List.length 
@@ -52,15 +52,20 @@ module Game =
     open Xunit
 
     let simRound (board: BoardSize) ((p,v): Robot ) (t: int): Robot = 
-        let (x,y) = p
+        let x,y = p
         let (vx,vy) = v
+        let (x: int64,y:int64) = (int64 x, int64 y)
+        let (vx: int64,vy:int64) = (int64 vx, int64 vy)
+        let t = int64 t
         let (w,h) = board
+        let h = int64 h
+        let w = int64 w
         // int64 here later if things go wrong
         let x' = (x+vx*t) % w
         let y' = (y+vy*t) % h
         let x'' = if (x' < 0) then w+x' else x'
         let y'' = if (y' < 0) then h+y' else y'
-        (x'',y''), v
+        (int x'',int y''), v
 
     let simRounds (board: BoardSize) (robots: Robot list) (t: int): Robot list = 
         robots |> List.map (fun r -> simRound board r t)
@@ -78,21 +83,60 @@ module Game =
         // product of elements in list
         robotsInQuadrants |> List.fold (fun acc (_,count) -> acc * count) 1
 
-    let isLineSymmetric (axis: int) (robots: Robot list) : bool =
-        true
+    let isLineSymmetric (axis: int) (robots: Position list) : bool =
+        // line is symmetric if there is a robot at the other side for each 
+        // robot at one side
+        // y is always the same, but we could code that without groups
+        let side1 = robots|> List.filter (fun (x,_)-> x < axis)
+        let side2 = robots|> List.filter (fun (x,_)-> x > axis) |> List.map (fun (x,y) -> (x-axis-1,y))
+//        printfn "axis %A" axis 
+//        printfn "robots %A" robots 
+//        printfn "side 1 %A" side1
+//        printfn "side 2 %A" side2
+        side1 = side2 
 
-    let symmetricAboutMiddle (board: BoardSize) (robots: Robot list) : bool =
-        // positions are (x,y) where x is x og y is like -y
-        // middleaxis is symmatric about x axis at middle
-        let middleAxis = board |> fst |> (/) 2
-        // lines have the same y
-        let lines = robots |> List.groupBy (fun ((_,y),_) -> y)
-        lines |> List.forall (fun (_,line) -> isLineSymmetric middleAxis line) 
+    let symmetricAboutMiddle ((boardWidth, _): BoardSize) (robots: Robot list) : bool =
+        if (boardWidth % 2 <> 1) then failwith "Board width must be uneven"
+        let middleAxis = boardWidth / 2
+   //     printfn "middle %A" middleAxis
+        let lines = robots |> List.map (fun (p,v) -> p) |> List.groupBy (fun (_,y) -> y)
+        lines |> List.forall (fun (_,robots) -> isLineSymmetric middleAxis robots)
 
-
-        // find simpler forms first, they might arrange in simpler, non xmastree like forms
     let xmasTree (board: BoardSize) (robots: Robot list) : bool =
         symmetricAboutMiddle board robots 
+
+    let rec simUntilXmasTree (board: BoardSize) (robots: Robot list) (i: int) (maxT: int) : (Robot list*int) =
+        if i > maxT then failwith (sprintf "Terminating %A " i)
+        //printBoard board robots 
+        if xmasTree board robots then (robots, i) 
+        else
+            let robots' = simRounds board robots 1
+            simUntilXmasTree board robots' (i+1) maxT
+
+    [<Fact>]
+    let testRobotSymmetri () =
+        let robots: Robot list = [(0,1),(0,1);(2,1),(0,0);(1,1),(0,0)] 
+        let robots2: Robot list = [(0,0),(0,0);(1,0),(0,1)] 
+        let robots3: Robot list = [(0,0),(0,0);(1,0),(0,1);(3,0),(2,0);(4,0),(2,0);(2,1),(1,0)] 
+        Assert.True(symmetricAboutMiddle (3,4) robots)
+        printfn "symmetric"
+        printBoard (3,4) robots
+
+        Assert.False(symmetricAboutMiddle (5,2) robots)
+        printfn "notsymmetric"
+        printBoard (5,2) robots
+
+        Assert.False(symmetricAboutMiddle (5,2) robots2)
+        printfn "notsymmetric"
+        printBoard (5,2) robots2
+
+        Assert.True(symmetricAboutMiddle (3,2) robots)
+        printfn "symmetric"
+        printBoard (3,2) robots
+
+        Assert.True(symmetricAboutMiddle (5,2) robots3)
+        printfn "symmatric"
+        printBoard (5,2) robots3
 
     [<Fact>]
     let testRobot () =
@@ -120,6 +164,8 @@ module Runner =
         let afterRound100 = simRounds board1 robots 100
         printBoard board1 afterRound100 |> ignore
         Assert.Equal(12, quadrantProduct board1 afterRound100)
+//        let (tree,i) =simUntilXmasTree board1 robots 0 10000000
+//        printfn ("%A %A") tree i
 
     [<Fact>]
     let testRobotReal () =
@@ -131,4 +177,15 @@ module Runner =
   // we do not which robots are in which position, so not possible
   // the system is not inversible when we do not know the speeds, which robot is where
 
-module Program = let [<EntryPoint>] main _ = 0
+module Program = 
+    open Input
+    open Game
+    let [<EntryPoint>] main _ = 
+        let robots1 = readInit "input1.txt" 
+        let (tree1,i1) =simUntilXmasTree board1 robots1 0 1000000000
+        printfn ("%A %A") tree1 i1
+        
+        let robots = readInit "input2.txt" 
+        let (tree,i) =simUntilXmasTree board2 robots 0 10000000
+        printfn ("%A %A") tree i
+        0
