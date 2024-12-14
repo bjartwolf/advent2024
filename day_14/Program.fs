@@ -89,16 +89,16 @@ module Game =
         // y is always the same, but we could code that without groups
         let side1 = robots|> List.filter (fun (x,_)-> x < axis)
         let side2 = robots|> List.filter (fun (x,_)-> x > axis) |> List.map (fun (x,y) -> (x-axis-1,y))
-//        printfn "axis %A" axis 
+ //       printfn "axis %A" axis 
 //        printfn "robots %A" robots 
-//        printfn "side 1 %A" side1
-//        printfn "side 2 %A" side2
-        side1 = side2 
+//        printfn "side 1 %A" (side1 |> List.distinct)
+//        printfn "side 2 %A" (side2 |> List.distinct)
+        (side1 |> List.distinct |> List.sort) = (side2 |> List.distinct |> List.sort)
 
     let symmetricAboutMiddle ((boardWidth, _): BoardSize) (robots: Robot list) : bool =
         if (boardWidth % 2 <> 1) then failwith "Board width must be uneven"
         let middleAxis = boardWidth / 2
-   //     printfn "middle %A" middleAxis
+  //      printfn "middle %A" middleAxis
         let lines = robots |> List.map (fun (p,v) -> p) |> List.groupBy (fun (_,y) -> y)
         lines |> List.forall (fun (_,robots) -> isLineSymmetric middleAxis robots)
 
@@ -107,7 +107,9 @@ module Game =
 
     let rec simUntilXmasTree (board: BoardSize) (robots: Robot list) (i: int) (maxT: int) : (Robot list*int) =
         if i > maxT then failwith (sprintf "Terminating %A " i)
-        //printBoard board robots 
+       // printfn "*** Round %A ***" i
+       // printBoard board robots 
+        
         if xmasTree board robots then (robots, i) 
         else
             let robots' = simRounds board robots 1
@@ -118,6 +120,13 @@ module Game =
         let robots: Robot list = [(0,1),(0,1);(2,1),(0,0);(1,1),(0,0)] 
         let robots2: Robot list = [(0,0),(0,0);(1,0),(0,1)] 
         let robots3: Robot list = [(0,0),(0,0);(1,0),(0,1);(3,0),(2,0);(4,0),(2,0);(2,1),(1,0)] 
+        let robots4: Robot list = [(0,0),(0,0);(1,0),(0,1);(3,0),(2,0);(4,0),(2,0);(4,1),(1,0)] 
+        let robots5: Robot list = [(0,1),(0,0);(1,1),(0,1);(3,1),(2,0);(4,1),(2,0);(2,3),(1,0)] 
+        let robots6: Robot list = robots4 @ robots5
+        printfn "symmatric"
+        printBoard (5,4) robots6
+        Assert.True(symmetricAboutMiddle (5,4) robots6)
+
         Assert.True(symmetricAboutMiddle (3,4) robots)
         printfn "symmetric"
         printBoard (3,4) robots
@@ -137,6 +146,7 @@ module Game =
         Assert.True(symmetricAboutMiddle (5,2) robots3)
         printfn "symmatric"
         printBoard (5,2) robots3
+
 
     [<Fact>]
     let testRobot () =
@@ -182,10 +192,10 @@ module Program =
     open Game
     let [<EntryPoint>] main _ = 
         let robots1 = readInit "input1.txt" 
-        let (tree1,i1) =simUntilXmasTree board1 robots1 0 1000000000
+        let (tree1,i1) =simUntilXmasTree board1 robots1 0 100000000
         printfn ("%A %A") tree1 i1
         
         let robots = readInit "input2.txt" 
-        let (tree,i) =simUntilXmasTree board2 robots 0 10000000
+        let (tree,i) =simUntilXmasTree board2 robots 0 100000000
         printfn ("%A %A") tree i
         0
