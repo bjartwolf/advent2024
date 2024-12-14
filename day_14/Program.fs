@@ -69,8 +69,9 @@ module Game =
 
     let simRounds (board: BoardSize) (robots: Robot list) (t: int): Robot list = 
         robots |> List.map (fun r -> simRound board r t)
+
     
-    let groupInQuadrant ((boardLength, boardHeight): BoardSize) ((p,_): Robot): int =
+    let groupInQuadrant ((boardLength, boardHeight): BoardSize) (p: Position): int =
         match p with
             | (x,y) when (x < boardLength / 2 && y < boardHeight/ 2) -> 1
             | (x,y) when (x > boardLength / 2 && y < boardHeight/ 2) -> 2
@@ -78,8 +79,20 @@ module Game =
             | (x,y) when (x < boardLength / 2 && y > boardHeight/ 2) -> 4
             | _ -> 5
 
+    let isInXmasFormation ((boardLength, boardHeight): BoardSize) (p: Position) : bool = 
+        let quadrant = groupInQuadrant (boardLength, boardHeight) p
+        match quadrant with 
+            | 1 -> true
+            | 2 -> true
+            | 3 -> true
+            | 4 -> true
+            | 5 -> true
+            | _ -> failwith "should not hape"
+
+
     let quadrantProduct (board: BoardSize) (robots: Robot list) : int =
-        let robotsInQuadrants = robots |> List.countBy (groupInQuadrant board) |> List.filter (fun (q,_) -> q <> 5)
+        let robotPositions = robots |> List.map (fun (p,_) -> p)
+        let robotsInQuadrants = robotPositions |> List.countBy (groupInQuadrant board) |> List.filter (fun (q,_) -> q <> 5)
         // product of elements in list
         robotsInQuadrants |> List.fold (fun acc (_,count) -> acc * count) 1
 
@@ -102,18 +115,39 @@ module Game =
         let lines = robots |> List.map (fun (p,v) -> p) |> List.groupBy (fun (_,y) -> y)
         lines |> List.forall (fun (_,robots) -> isLineSymmetric middleAxis robots)
 
+    let tostrings (board: BoardSize)(robots: Position list): string list=
+        let (w,h) = board
+        [
+            for i in 0..h-1 do
+                let mutable chars : char []= Array.create w '.'
+                for j in 0..w-1 do
+                    if List.exists (fun (x,y) -> x = j && y = i) robots then
+                        chars.[j] <- 'X'
+                yield new System.String(chars)
+        ]
+
+    let hasStraightLine (board: BoardSize) (robots: Position list): bool =
+        let w,h = board
+        let strings = tostrings board robots
+        let straight = "XXXXXXXXX"
+        List.exists (fun (s:string) -> s.Contains(straight)) strings
+         
+
     let xmasTree (board: BoardSize) (robots: Robot list) : bool =
-        symmetricAboutMiddle board robots 
+        let positions = robots |> List.map (fun (p,_) -> p) |> List.distinct
+        hasStraightLine board positions 
+//        symmetricAboutMiddle board robots 
 
     let rec simUntilXmasTree (board: BoardSize) (robots: Robot list) (i: int) (maxT: int) : (Robot list*int) =
+        printf "%A " i
         if i > maxT then failwith (sprintf "Terminating %A " i)
        // printfn "*** Round %A ***" i
        // printBoard board robots 
         
-        if xmasTree board robots then (robots, i) 
+        let robots' = simRounds board robots i 
+        if xmasTree board robots' then (robots', i) 
         else
-            let robots' = simRounds board robots 1
-            simUntilXmasTree board robots' (i+1) maxT
+            simUntilXmasTree board robots (i+1) maxT
 
     [<Fact>]
     let testRobotSymmetri () =
@@ -191,11 +225,12 @@ module Program =
     open Input
     open Game
     let [<EntryPoint>] main _ = 
-        let robots1 = readInit "input1.txt" 
-        let (tree1,i1) =simUntilXmasTree board1 robots1 0 100000000
-        printfn ("%A %A") tree1 i1
+       // let robots1 = readInit "input1.txt" 
+       // let (tree1,i1) =simUntilXmasTree board1 robots1 0 100000000
+       // printfn ("%A %A") tree1 i1
         
         let robots = readInit "input2.txt" 
         let (tree,i) =simUntilXmasTree board2 robots 0 100000000
+        printBoard board2 tree |> ignore
         printfn ("%A %A") tree i
         0
