@@ -50,11 +50,12 @@ module Game =
               |> List.groupBy (fun ((x,y),z) -> y) 
               |> List.sortBy (fun (y,x) -> y )
               |> List.map (fun (_,x) -> x |> List.sortWith comparePositions)
-              |> List.map (List.map (fun (((side,x),y),c) -> match  c with 
-                                                                            | Wall -> [|Wall|]
-                                                                            | Box -> [|Box;|]
-                                                                            | Player -> [|Player|]
-                                                                            | Floor-> [|'.'|]
+              |> List.map (List.map (fun (((side,x),y),c) -> match side, c with 
+                                                                            | _,Wall -> [|Wall|]
+                                                                            | Left,Box -> [|'[';|]
+                                                                            | Right,Box -> [|']';|]
+                                                                            | _,Player -> [|Player|]
+                                                                            | _,Floor-> [|'.'|]
                                                                             | _ -> [|' '|] ) ) 
               |> List.map (Array.ofList)
                       |> List.map (fun x -> String( Array.concat x ))
@@ -64,16 +65,19 @@ module Game =
         let board1t,moves1r = readInit "input1.txt"
         let board2t,moves2r = readInit "input2.txt"
         let board3t,moves3r = readInit "input3.txt"
+        let board4t,moves4r = readInit "input4.txt"
 
         let board: string = match board_nr with
                                 | 1 -> board1t 
                                 | 2 -> board2t
                                 | 3 -> board3t
+                                | 4 -> board4t
                                 | _ -> failwith "I don't have that"
         let moves : string = match board_nr with
                                 | 1 ->moves1r 
                                 | 2 -> moves2r 
                                 | 3 -> moves3r 
+                                | 4 -> moves4r 
                                 | _ -> failwith "I don't have that"
 
         board, moves 
@@ -242,7 +246,7 @@ module Game =
 module Program = 
     open Game
     let [<EntryPoint>] main _ =
-        let finishedBoard = playBoard 1
+        let finishedBoard = playBoard 4
         printfn "%s" (serializeBoard finishedBoard)
         Console.ReadKey() |> ignore
         0
