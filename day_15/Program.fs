@@ -35,16 +35,27 @@ module Game =
     // x is index in array, growing to the right 
     type Board = Map<(Pos*int),char> 
 
+    let comparePositions ((((s1,x1),_),_): (Pos*int)*Char) ((((_,x2),_),_): (Pos*int)*Char) =
+        if (x1 > x2) then 
+            1
+        elif (x1 < x2) then 
+            -1
+        elif (s1 = Right) then
+           1
+        else
+           -1 
+
+
     let serializeBoard (board: Board) : string =
         board |> Map.toList  
               |> List.groupBy (fun ((x,y),z) -> y) 
               |> List.sortBy (fun (y,x) -> y )
-              |> List.map (fun (_,x) -> x |> List.sortBy (fun (((side, x),y),z) -> x) )
+              |> List.map (fun (_,x) -> x |> List.sortWith comparePositions)
               |> List.map (List.map (fun (((side,x),y),c) -> match side, c with 
                                                                                     | Both, Wall -> [|Wall;Wall|]
+                                                                                    | Both, Box -> [|Box;Box;|]
                                                                                     | Left, Player -> [|Player;Floor|]
 //                                                                                    | Right, Player-> [|'.';'@'|]
-                                                                                    | Both, Box -> [|Box;Box;|]
                                                                                     | Both, Floor -> [|Floor;Floor|]
 //                                                                                    | Right, Box -> [|'[';']'|]
                                                                                     | _ -> [|' ';' '|] ) ) 
@@ -92,7 +103,15 @@ module Game =
     let getPlayerPosition (board: Board): Pos*int =
           board |> Map.filter (fun _ t -> t=Player) |> Map.keys |> Seq.head 
 
-    let getTile (board: Board) (pos: Pos*int): Char option = Map.tryFind pos board
+    let getTile (board: Board) (((side,x),y): Pos*int): Char option = 
+        // need to check more than one side, can be on both sides too
+        let leftTile = Map.tryFind ((Left,x),y) board
+        let rightTile = Map.tryFind ((Left,x),y) board
+        let bothTile = Map.tryFind ((Both,x),y) board
+        match leftTile, rightTile, bothTile with
+            | _,_, Some b -> Some b
+            | Some l,_, _ -> Some l
+            | _,Some r, _ -> Some r
 
     let getBehindBoxAndPosition (board: Board) ((x,y): int*int) ((Δx,Δy): int*int): (char * int) =
         let rec getUntilNotBox (i: int) : (char * int) =
@@ -137,8 +156,9 @@ module Game =
     let legalMove (board: Board) (Δ: int*int): bool = 
         let (Δx,Δy) = Δ
         let ((side, x),y) = getPlayerPosition board
-        let pos' = (Left, x+Δx),y+Δy
+        let pos' = (side, x+Δx),y+Δy
         let t' = getTile board pos' 
+        printfn "checking move %A " pos'
         match t' with
             | Some c when c = Wall -> false 
             | Some c when c = Box -> canPushBox board (x,y) (Δx,Δy) 
@@ -155,9 +175,11 @@ module Game =
         let tile_Δ = getTile board ((Left, x+Δx),y+Δy)
         match tile_Δ with
             | Some Floor -> board
-                        //    |> Map.remove ((Left, x),y) 
-                        //    |> Map.add ((Left,x' ,y') Player  
-                        //    |> Map.add ((Left,x) ,y) Floor
+                            |> Map.remove playerPos 
+                            |> Map.remove leftPos' 
+                            |> Map.add leftPos' Player  
+                            |> Map.add ((Right,x'),y') Floor 
+                            |> Map.add ((Both, x),y) Floor
             | Some Box ->
                         let (tileBehind, i) = getBehindBoxAndPosition board (x,y) (Δx,Δy)
                         if tileBehind <> Floor then failwith "this was not a legal move"
@@ -217,7 +239,7 @@ module Game =
 
     [<Fact>]
     let testBoxesSum () =
-//        Assert.Equal(2028,sumOfBoxes 1)
+        Assert.Equal(2028,sumOfBoxes 1)
         Assert.Equal(10092,sumOfBoxes 2)
        // Assert.Equal(1360570,sumOfBoxes 3)
 
