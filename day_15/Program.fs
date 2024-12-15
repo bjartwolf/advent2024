@@ -114,9 +114,9 @@ module Game =
     let movePlayer (board: Board) (keypress: Char): Board = 
         let Δ = match keypress with
                                 | Keypress_left -> (-1,0) 
-                                | Keypress_down -> (0,-1) 
+                                | Keypress_down -> (0,1) 
                                 | Keypress_right -> (1,0) 
-                                | Keypress_up -> (0,1) 
+                                | Keypress_up -> (0,-1) 
                                 | _ -> failwith "There are only four known directions." 
         if (legalMove board Δ) then
             move board Δ
@@ -140,6 +140,9 @@ module Game =
             let move = moves |> Seq.tryHead 
             match move with
                 | Some m -> let board' = movePlayer board m
+                            printfn "Move %A" m 
+                            printfn "%s" (serializeBoard board')
+                            printfn ""
                             playAllMoves board' (String(Seq.tail moves |> Seq.toArray))
                 | None -> board 
         playAllMoves board allMoves
