@@ -69,7 +69,6 @@ module Game =
             |> Map
 
     let getPlayerPosition (board: Board): int*int =
-          //board |> Map.filter (fun _ t -> t=player || t=player_on_goal_square )|> Map.keys |> Seq.head 
           board |> Map.filter (fun _ t -> t=Player) |> Map.keys |> Seq.head 
 
     let getTile (board: Board) (pos: int*int): Char option = Map.tryFind pos board
@@ -91,7 +90,6 @@ module Game =
             | Floor, _ -> true
             | _ -> false
 
-        // ikke skriv regler som ikke er lov i tullesokoban, det blir bare pes.
     [<Fact>]
     let testPushBoxes() = 
         let board = Map.empty |> Map.add (0,0) Player |> Map.add (1,0) Box |> Map.add (2,0) Floor
@@ -112,7 +110,6 @@ module Game =
     let testPushMultipleBoxesWithWall() = 
         let board = Map.empty |> Map.add (0,0) Player |> Map.add (1,0) Box |> Map.add (2,0) Box |> Map.add (3,0) Box |> Map.add (4,0) Wall 
         Assert.False(canPushBox board (0,0) (1,0))
-
 
     let legalMove (board: Board) (Δ: int*int): bool = 
         let (Δx,Δy) = Δ
