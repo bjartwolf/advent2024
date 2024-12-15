@@ -24,14 +24,17 @@ module Game =
     let init (board_nr:int): string*string = 
         let board1t,moves1r = readInit "input1.txt"
         let board2t,moves2r = readInit "input2.txt"
+        let board3t,moves3r = readInit "input3.txt"
 
         let board: string = match board_nr with
                                 | 1 -> board1t 
                                 | 2 -> board2t
+                                | 3 -> board3t
                                 | _ -> failwith "I don't have that"
         let moves : string = match board_nr with
                                 | 1 ->moves1r 
                                 | 2 -> moves2r 
+                                | 3 -> moves3r 
                                 | _ -> failwith "I don't have that"
 
         board, moves 
@@ -187,6 +190,17 @@ module Game =
                             playAllMoves board' (String(Seq.tail moves |> Seq.toArray))
                 | None -> board 
         playAllMoves board allMoves
+
+    let sumOfBoxes (i: int): int =
+        let board = playBoard i
+        let boxes = board |> Map.toSeq |> Seq.filter (fun (p,c) -> c = Box )  |> Seq.map (fun (p,c) -> p)
+        boxes |> Seq.sumBy (fun (x,y) -> x+y*100)
+
+    [<Fact>]
+    let testBoxesSum () =
+        Assert.Equal(2028,sumOfBoxes 1)
+        Assert.Equal(10092,sumOfBoxes 2)
+       // Assert.Equal(1360570,sumOfBoxes 3)
 
 module Program = 
     open Game
