@@ -39,10 +39,14 @@ module Game =
  //   let goal_square = '.'
     let floor = '.'
 
-    let keypress_left = '<'
-    let keypress_down = 'v'
-    let keypress_up = '^'
-    let keypress_right = '>'
+    [<Literal>]
+    let Keypress_left = '<'
+    [<Literal>]
+    let Keypress_down = 'v'
+    [<Literal>]
+    let Keypress_up = '^'
+    [<Literal>]
+    let Keypress_right = '>'
 
     let parseBoard (board:string): Board = 
         board.Split(Environment.NewLine.ToCharArray()) 
@@ -61,6 +65,7 @@ module Game =
     let getTile (board: Board) (pos: int*int): Char option = Map.tryFind pos board
 
     let canPushBox (board: Board) ((x,y): int*int) ((Δx,Δy): int*int): bool = 
+        // this needs to change later
         let tileBehindBox = getTile board (x+2*Δx, y+2*Δy)
         tileBehindBox = Some floor //|| tileBehindBox = Some goal_square 
 
@@ -79,8 +84,11 @@ module Game =
     let move (board: Board) ((Δx,Δy): int*int): Board = 
         let (x,y) = getPlayerPosition board
         let pos' = x+Δx,y+Δy
-        let tile = getTile board (x,y)
+       // let tile = getTile board (x,y)
         let tile_Δ = getTile board (x+Δx,y+Δy)
+        match tile_Δ with
+            | Some floor -> board |> Map.remove (x,y) |> Map.add pos' player  |> Map.add (x,y) floor
+            | _ -> board
 
         (*
         let tile_Δ' = if tile_Δ = Some goal_square || tile_Δ= Some box_on_goal_square then
@@ -101,15 +109,14 @@ module Game =
             boardWithPlayerBack 
 *)
 // todo add rules
-        board 
 
     //let movePlayer (board: Board) (keypress: Char): (Board * Char option) =
     let movePlayer (board: Board) (keypress: Char): Board = 
         let Δ = match keypress with
-                                | '<' -> (-1,0) 
-                                | 'v' -> (0,1) 
-                                | '>' -> (1,0) 
-                                | 'v' -> (0,-1) 
+                                | Keypress_left -> (-1,0) 
+                                | Keypress_down -> (0,-1) 
+                                | Keypress_right -> (1,0) 
+                                | Keypress_up -> (0,1) 
                                 | _ -> failwith "There are only four known directions." 
         if (legalMove board Δ) then
             move board Δ
@@ -147,5 +154,9 @@ module Game =
 //        Assert.Equal(1, input.Length) 
 
 module Program = 
+    open Game
     let [<EntryPoint>] main _ =
+        let finishedBoard = playBoard 1
+        printfn "%s" (serializeBoard finishedBoard)
+        Console.ReadKey() |> ignore
         0
