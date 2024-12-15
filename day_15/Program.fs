@@ -78,9 +78,18 @@ module Game =
     let getTile (board: Board) (pos: int*int): Char option = Map.tryFind pos board
 
     let canPushBox (board: Board) ((x,y): int*int) ((Δx,Δy): int*int): bool = 
-        // this needs to change later
-        let tileBehindBox = getTile board (x+2*Δx, y+2*Δy)
-        tileBehindBox = Some Floor //|| tileBehindBox = Some goal_square 
+        // need to find the first tile that is not a box after all boxes in a 
+        // row of boxes and if that is floor , then we push
+        let rec getUntilNotBox (i: int) : (char * int) =
+            let tile = getTile board (x+i*Δx,y+i*Δy)
+            match tile with 
+                | Some Box -> getUntilNotBox (i+1) 
+                | Some tile -> tile, i
+                | None -> Wall, i// think this is only for tests when there are no wall, return wallfailwith "not sure"
+        let tileBehindBoxes = getUntilNotBox 1 
+        match tileBehindBoxes with
+            | Floor, _ -> true
+            | _ -> false
 
         // ikke skriv regler som ikke er lov i tullesokoban, det blir bare pes.
     [<Fact>]
@@ -90,6 +99,20 @@ module Game =
         Assert.True(canPushBox board (0,0) (1,0))
         Assert.False(canPushBox board (0,0) (-1,0))
         Assert.False(canPushBox board (0,0) (0,1))
+
+    [<Fact>]
+    let testPushMultipleBoxes() = 
+        let board = Map.empty |> Map.add (0,0) Player |> Map.add (1,0) Box |> Map.add (2,0) Box |> Map.add (3,0) Box |> Map.add (4,0) Floor
+        printfn "%s" (serializeBoard board)
+        Assert.True(canPushBox board (0,0) (1,0))
+        Assert.False(canPushBox board (0,0) (-1,0))
+        Assert.False(canPushBox board (0,0) (0,1))
+
+    [<Fact>]
+    let testPushMultipleBoxesWithWall() = 
+        let board = Map.empty |> Map.add (0,0) Player |> Map.add (1,0) Box |> Map.add (2,0) Box |> Map.add (3,0) Box |> Map.add (4,0) Wall 
+        Assert.False(canPushBox board (0,0) (1,0))
+
 
     let legalMove (board: Board) (Δ: int*int): bool = 
         let (Δx,Δy) = Δ
