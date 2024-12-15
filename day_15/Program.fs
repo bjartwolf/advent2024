@@ -124,7 +124,7 @@ module Game =
         let t' = getTile board pos' 
         match t' with
             | Some c when c = Wall -> false 
-            | Some c when c = Box -> canPushBox board (x,y) (Δx,Δy) // TODO PUSH ROW OF BOXES
+            | Some c when c = Box -> canPushBox board (x,y) (Δx,Δy) 
             | Some _ -> true
             | None -> false
         
@@ -140,15 +140,31 @@ module Game =
                             |> Map.add (x,y) Floor
             | Some Box ->
                         let (tileBehind, i) = getBehindBoxAndPosition board (x,y) (Δx,Δy)
+                        let lastBoxPosition = i - 1
+//                        printfn " last box position %A" lastBoxPosition
+//                        printfn " i %A" i 
                         if tileBehind <> Floor then failwith "this was not a legal move"
                         board 
                             |> Map.remove (x,y) 
-                            |> Map.remove (x+Δx,y+Δy) 
-                            |> Map.remove (x+i*Δx,y+2*Δy) 
+                            |> Map.remove pos' 
+                            |> Map.remove (x+2*Δx,y+2*Δy) 
                             |> Map.add (x,y) Floor
                             |> Map.add pos' Player  
-                            |> Map.add (x+i*Δx,y+2*Δy) Box
+                            |> Map.add (x+2*Δx,y+2*Δy) Box
+                            |> Map.add (x+i*Δx,y+i*Δy) Box
             | _ -> board
+
+    [<Fact>]
+    let testPushMultipleBoxesBoard() = 
+        let board = Map.empty |> Map.add (0,0) Player |> Map.add (1,0) Box |> Map.add (2,0) Box |> Map.add (3,0) Box |> Map.add (4,0) Floor
+        let boardAfterPush = Map.empty |> Map.add (0,0) Floor |> Map.add (1,0) Player |> Map.add (2,0) Box |> Map.add (3,0) Box |> Map.add (4,0) Box 
+        printfn "%s" (serializeBoard board)
+        printfn "%s" (serializeBoard boardAfterPush)
+        let push = move board (1,0)
+        printfn "%s" (serializeBoard push) 
+        Assert.Equivalent(boardAfterPush, push)
+
+
 
         (*
         let tile_Δ' = if tile_Δ = Some goal_square || tile_Δ= Some box_on_goal_square then
