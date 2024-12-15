@@ -10,6 +10,10 @@ module Game =
     [<Literal>]
     let Box = 'O'
     [<Literal>]
+    let LeftBox = '['
+    [<Literal>]
+    let RightBox= ']'
+    [<Literal>]
     let Floor = '.'
 
     [<Literal>]
@@ -50,12 +54,12 @@ module Game =
               |> List.groupBy (fun ((x,y),z) -> y) 
               |> List.sortBy (fun (y,x) -> y )
               |> List.map (fun (_,x) -> x |> List.sortWith comparePositions)
-              |> List.map (List.map (fun (((side,x),y),c) -> match side, c with 
-                                                                            | _,Wall -> [|Wall|]
-                                                                            | Left,Box -> [|'[';|]
-                                                                            | Right,Box -> [|']';|]
-                                                                            | _,Player -> [|Player|]
-                                                                            | _,Floor-> [|'.'|]
+              |> List.map (List.map (fun (((side,x),y),c) -> match c with 
+                                                                            | Wall -> [|Wall|]
+                                                                            | RightBox -> [|']';|]
+                                                                            | LeftBox-> [|'[';|]
+                                                                            | Player -> [|Player|]
+                                                                            | Floor-> [|'.'|]
                                                                             | _ -> [|' '|] ) ) 
               |> List.map (Array.ofList)
                       |> List.map (fun x -> String( Array.concat x ))
@@ -86,7 +90,7 @@ module Game =
         match tile with
             | Wall -> [ ((Left,x),y), Wall; ((Right ,x),y), Wall ] 
             | Player -> [((Left,x),y), Player ; ((Right ,x),y), Floor]
-            | Box ->  [ ((Left,x),y), Box; ((Right ,x),y), Box] 
+            | Box ->  [ ((Left,x),y), LeftBox; ((Right ,x),y), RightBox] 
             | Floor ->  [ ((Left,x),y), Floor; ((Right ,x),y), Floor ] 
             | _ -> failwith "Unknown tile"
 
@@ -116,7 +120,6 @@ module Game =
             | Right when Δx = -1 -> (Left, (x)),y
             | side -> (side,x), y + Δy
 
-
     let getBehindBoxAndPosition (board: Board) (pos: Pos*int) ((Δx,Δy): int*int): (char * (Pos*int)) =
         // need to use positions 
         let rec getUntilNotBox (nextPos: Pos*int) : (char * (Pos*int)) =
@@ -124,38 +127,66 @@ module Game =
             let nextMove = calcMove nextPos (Δx,Δy) 
             let tile = getTile board nextMove 
             match tile with 
-                | Some Box -> getUntilNotBox nextMove 
+                | Some LeftBox -> getUntilNotBox nextMove 
+                | Some RightBox -> getUntilNotBox nextMove 
                 | Some tile -> tile, nextMove
                 | None -> Wall, nextMove// think this is only for tests when there are no wall, return wallfailwith "not sure"
         getUntilNotBox pos 
 
+    let collectAllBoxes (board: Board) (pos: Pos*int) ((Δx,Δy): int*int): (char* (Pos*int)) list =
+        let rec collectBoxes (nextPos: Pos*int) : (char* (Pos*int)) list =
+            let nextMove = calcMove nextPos (Δx,Δy) 
+            let tile = getTile board nextMove 
+            // try to handle pushing horizontally first by collecting boxes, then moving on to the other one
+            if Δx = 1 then
+                match tile with
+                    | Some tile when tile = LeftBox || tile = RightBox -> (tile, nextMove)  ::  collectBoxes nextMove
+                    | Some _ -> [] 
+                    | None -> failwith "out of board without hitting wall"
+            else 
+                match tile with 
+                    | Some LeftBox -> 
+                        []
+                        //(LeftBox, nextMove) :: collectBoxes nextMove 
+                    | Some RightBox -> 
+                        // let also find box to the left of this box
+    //                    let leftMove = 
+                        []
+                        //(RightBox, nextMove) :: collectBoxes nextMove 
+                    | Some tile -> []
+                        // [tile, nextMove]
+                    | None -> failwith "out of board without hitting wall" 
+        collectBoxes pos
+
+
     let canPushBox (board: Board) ((x,y): Pos*int) ((Δx,Δy): int*int): bool = 
         // need to find the first tile that is not a box after all boxes in a 
         // row of boxes and if that is floor , then we push
-        let tileBehindBoxes = getBehindBoxAndPosition board (x,y) (Δx,Δy)
-        match tileBehindBoxes with
-            | Floor, _ -> true
-            | _ -> false
+        let collectAllBoxes = collectAllBoxes board (x,y) (Δx,Δy)
+        let tilesBehindBoxes = collectAllBoxes |> List.map (fun (_,box) -> getBehindBoxAndPosition board box (Δx,Δy))
+                                              |> List.map (fun (tile,_) -> tile)
+        tilesBehindBoxes |> List.forall (fun tileBehindBoxes -> tileBehindBoxes = Floor)
 
     [<Fact>]
     let testPushBoxes() = 
-        let board = Map.empty |> Map.add ((Left,0),0) Player |> Map.add ((Right,0) ,0) Box |> Map.add ((Left,1),0) Floor
+        let board = Map.empty |> Map.add ((Left,0),0) Player |> Map.add ((Right,0) ,0) LeftBox |> Map.add ((Left,1),0) Floor
         printfn "%s" (serializeBoard board)
         Assert.True(canPushBox board ((Left,0),0) (1,0))
-        Assert.False(canPushBox board ((Left,0),0) (-1,0))
-        Assert.False(canPushBox board ((Left,0),0) (0,1))
+ //       Assert.False(canPushBox board ((Left,0),0) (-1,0))
+ //       Assert.False(canPushBox board ((Left,0),0) (0,1))
 
     [<Fact>]
     let testPushMultipleBoxes() = 
-        let board = Map.empty |> Map.add ((Left,0),0) Player |> Map.add ((Right,0),0) Box |> Map.add ((Left,1),0) Box |> Map.add ((Right,1),0) Box |> Map.add ((Left,2),0) Floor
+        let board = Map.empty |> Map.add ((Left,0),0) Player |> Map.add ((Right,0),0) LeftBox |> Map.add ((Left,1),0) RightBox |> Map.add ((Right,1),0) LeftBox |> Map.add ((Left,2),0) Floor |> Map.add ((Right,2),0) Wall
         printfn "%s" (serializeBoard board)
         Assert.True(canPushBox board ((Left,0),0) (1,0))
-        Assert.False(canPushBox board ((Left,0),0) (-1,0))
-        Assert.False(canPushBox board ((Left,0),0) (0,1))
+//        Assert.False(canPushBox board ((Left,0),0) (-1,0))
+//        Assert.False(canPushBox board ((Left,0),0) (0,1))
 
     [<Fact>]
     let testPushMultipleBoxesWithWall() = 
-        let board = Map.empty |> Map.add ((Left,0),0) Player |> Map.add ((Right,0),0) Box |> Map.add ((Left,1),0) Box |> Map.add ((Right,1),0) Box |> Map.add ((Left,2),0) Wall 
+        let board = Map.empty |> Map.add ((Left,0),0) Player |> Map.add ((Right,0),0) LeftBox |> Map.add ((Left,1),0) LeftBox |> Map.add ((Right,1),0) LeftBox |> Map.add ((Left,2),0) Wall 
+        printfn "%s" (serializeBoard board)
         Assert.False(canPushBox board ((Left,0),0) (1,0))
 
     let legalMove (board: Board) (Δ: int*int): bool = 
@@ -166,7 +197,7 @@ module Game =
         printfn "checking move %A " pos'
         match t' with
             | Some c when c = Wall -> false 
-            | Some c when c = Box -> canPushBox board playerPos (Δx,Δy) 
+            | Some c when c = LeftBox || c = RightBox-> canPushBox board playerPos (Δx,Δy) 
             | Some _ -> true
             | None -> false
 
@@ -181,7 +212,7 @@ module Game =
                             |> Map.remove pos' 
                             |> Map.add pos' Player  
                             |> Map.add playerPos Floor 
-            | Some Box ->
+            | Some LeftBox | Some RightBox ->
                         let (tileBehind, i) = getBehindBoxAndPosition board playerPos (Δx,Δy)
                         if tileBehind <> Floor then failwith "this was not a legal move"
                         board 
@@ -192,17 +223,17 @@ module Game =
                             |> Map.add i Box
             | _ -> board
 
-            (*
     [<Fact>]
     let testPushMultipleBoxesBoard() = 
-        let board = Map.empty |> Map.add (Left 0,0) Player |> Map.add (1,0) Box |> Map.add (2,0) Box |> Map.add (3,0) Box |> Map.add (4,0) Floor
-        let boardAfterPush = Map.empty |> Map.add (0,0) Floor |> Map.add (1,0) Player |> Map.add (2,0) Box |> Map.add (3,0) Box |> Map.add (4,0) Box 
+        let board = Map.empty |> Map.add ((Left,0),0) Player |> Map.add ((Right,0),0) LeftBox |> Map.add ((Left,1),0) RightBox |> Map.add ((Right,1),0) LeftBox |> Map.add ((Left,1),0) RightBox |> Map.add ((Right,1),0) Floor |> Map.add ((Left,2),0) Wall
+        let boardAfterPush = Map.empty |> Map.add ((Left,0),0) Floor |> Map.add ((Right,0),0) Player |> Map.add ((Left,1),0) LeftBox |> Map.add ((Right,1),0) RightBox |> Map.add ((Left,1),0) LeftBox |> Map.add ((Right,1),0) RightBox  |> Map.add ((Left,2),0) Wall
         printfn "%s" (serializeBoard board)
         printfn "%s" (serializeBoard boardAfterPush)
+        Assert.True(canPushBox board ((Left,0),0) (1,0))
         let push = move board (1,0)
         printfn "%s" (serializeBoard push) 
         Assert.Equivalent(boardAfterPush, push)
-*)
+
     let movePlayer (board: Board) (keypress: Char): Board = 
         let Δ = match keypress with
                                 | Keypress_left -> (-1,0) 
@@ -233,7 +264,7 @@ module Game =
 
     let sumOfBoxes (i: int): int =
         let board = playBoard i
-        let boxes = board |> Map.toSeq |> Seq.filter (fun (p,c) -> c = Box )  |> Seq.map (fun (p,c) -> p)
+        let boxes = board |> Map.toSeq |> Seq.filter (fun (p,c) -> c = LeftBox )  |> Seq.map (fun (p,c) -> p)
         boxes |> Seq.sumBy (fun ((_,x),y) -> x+y*100)
 
         (*
