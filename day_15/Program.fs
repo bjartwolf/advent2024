@@ -146,9 +146,13 @@ module Game =
             else 
                 match tile with 
                     | Some LeftBox -> 
-                        (LeftBox, nextMove) :: collectBoxes nextMove 
+                            let rightPos = calcMove nextMove (1, 0)
+                            let newBoxes = collectBoxes rightPos 
+                            (LeftBox, nextMove) :: collectBoxes nextMove @ newBoxes
                     | Some RightBox -> 
-                        (LeftBox, nextMove) :: collectBoxes nextMove 
+                            let leftPos = calcMove nextMove (-1, 0)
+                            let newBoxes = collectBoxes leftPos 
+                            (RightBox, nextMove) :: collectBoxes nextMove @ newBoxes
                     | Some tile -> []
                     | None -> failwith "out of board without hitting wall" 
         collectBoxes pos
