@@ -152,7 +152,7 @@ module Game =
                     | Some RightBox -> 
                             let leftPos = calcMove nextMove (-1, 0)
                             let newBoxes = collectBoxes leftPos 
-                            (RightBox, nextMove) :: (LeftBox, leftPos) ::collectBoxes nextMove @ newBoxes
+                            (LeftBox, leftPos) :: (RightBox, nextMove) ::collectBoxes nextMove @ newBoxes
                     | Some tile -> []
                     | None -> failwith "out of board without hitting wall" 
         collectBoxes pos 
@@ -217,12 +217,14 @@ module Game =
             | Some LeftBox | Some RightBox ->
                         let boxes = collectAllBoxes board playerPos (Δx,Δy)
                         let oldBoxesPositions = boxes |> List.map (fun (_,box) -> box)
-                        let moveBoxes = boxes |> List.map (fun (c,pos) -> calcMove pos (Δx,Δy), c) // move different for right and leftboxes//|> List.map (fun x,p -> )
-                        // can remove this was not needed
+                        let newFloor = boxes |> List.map (fun (_, box) -> box, Floor)
+                        let moveBoxes = boxes |> List.map (fun (c,pos) -> calcMove pos (Δx,Δy), c)
                         board 
                             |> Map.remove playerPos 
-                            |> Map.filter (fun x _ -> oldBoxesPositions |> List.contains x |> not) 
+//                            |> Map.filter (fun x _ -> oldBoxesPositions |> List.contains x |> not) 
+                            |> (updatedMap newFloor)
                             |> (updatedMap moveBoxes)
+                      //      |> (updatedMap newFloor)
                             |> Map.add pos' Player
                             |> Map.add playerPos Floor
             | _ -> board
