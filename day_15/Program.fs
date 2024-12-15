@@ -128,7 +128,6 @@ module Game =
     let move (board: Board) ((Δx,Δy): int*int): Board = 
         let (x,y) = getPlayerPosition board
         let pos' = x+Δx,y+Δy
-       // let tile = getTile board (x,y)
         let tile_Δ = getTile board (x+Δx,y+Δy)
         match tile_Δ with
             | Some Floor -> board
@@ -137,9 +136,6 @@ module Game =
                             |> Map.add (x,y) Floor
             | Some Box ->
                         let (tileBehind, i) = getBehindBoxAndPosition board (x,y) (Δx,Δy)
-                        let lastBoxPosition = i - 1
-//                        printfn " last box position %A" lastBoxPosition
-//                        printfn " i %A" i 
                         if tileBehind <> Floor then failwith "this was not a legal move"
                         board 
                             |> Map.remove (x,y) 
