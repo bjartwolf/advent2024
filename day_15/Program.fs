@@ -271,19 +271,22 @@ module Game =
     let sumOfBoxes (i: int): int =
         let board = playBoard i
         let boxes = board |> Map.toSeq |> Seq.filter (fun (p,c) -> c = LeftBox )  |> Seq.map (fun (p,c) -> p)
-        boxes |> Seq.sumBy (fun ((_,x),y) -> x+y*100)
+        boxes |> Seq.sumBy (fun ((s,x),y) -> 
+            printfn "x %A y %A" x y
+            match s with 
+                | Left -> (x*2)+ 100*y
+                | Right -> (2*x+1)+ 100*y)
 
-        (*
     [<Fact>]
     let testBoxesSum () =
-        Assert.Equal(2028,sumOfBoxes 1)
-        Assert.Equal(10092,sumOfBoxes 2)
+        Assert.Equal(9021,sumOfBoxes 2)
+        Assert.Equal(9021,sumOfBoxes 3)
+//        Assert.Equal(10092,sumOfBoxes 2)
        // Assert.Equal(1360570,sumOfBoxes 3)
-*)
 module Program = 
     open Game
     let [<EntryPoint>] main _ =
-        let finishedBoard = playBoard 4
+        let finishedBoard = playBoard 3
         printfn "%s" (serializeBoard finishedBoard)
         Console.ReadKey() |> ignore
         0
