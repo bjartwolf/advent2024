@@ -50,15 +50,15 @@ module Game =
               |> List.groupBy (fun ((x,y),z) -> y) 
               |> List.sortBy (fun (y,x) -> y )
               |> List.map (fun (_,x) -> x |> List.sortWith comparePositions)
-              |> List.map (List.map (fun (((side,x),y),c) -> match side, c with 
-                                                                                    | _, Wall -> [|Wall|]
-                                                                                    | _, Box -> [|Box;|]
-                                                                                    | _, Player -> [|Player|]
-                                                                                    | _, Floor-> [|'.'|]
-                                                                                    | _ -> [|' '|] ) ) 
+              |> List.map (List.map (fun (((side,x),y),c) -> match  c with 
+                                                                            | Wall -> [|Wall|]
+                                                                            | Box -> [|Box;|]
+                                                                            | Player -> [|Player|]
+                                                                            | Floor-> [|'.'|]
+                                                                            | _ -> [|' '|] ) ) 
               |> List.map (Array.ofList)
-              |> List.map (fun x -> String( Array.concat x ))
-              |> String.concat Environment.NewLine
+                      |> List.map (fun x -> String( Array.concat x ))
+                      |> String.concat Environment.NewLine
 
     let init (board_nr:int): string*string = 
         let board1t,moves1r = readInit "input1.txt"
@@ -81,7 +81,7 @@ module Game =
     let toNewMap ((x,y): int*int) (tile: Char) : ((Pos*int)*Char) list =
         match tile with
             | Wall -> [ ((Left,x),y), Wall; ((Right ,x),y), Wall ] 
-            | Player -> [((Left,x),y), Player ]
+            | Player -> [((Left,x),y), Player ; ((Right ,x),y), Floor]
             | Box ->  [ ((Left,x),y), Box; ((Right ,x),y), Box] 
             | Floor ->  [ ((Left,x),y), Floor; ((Right ,x),y), Floor ] 
             | _ -> failwith "Unknown tile"
@@ -117,6 +117,7 @@ module Game =
     let canPushBox (board: Board) ((x,y): int*int) ((Δx,Δy): int*int): bool = 
         // need to find the first tile that is not a box after all boxes in a 
         // row of boxes and if that is floor , then we push
+        true
         let tileBehindBoxes = getBehindBoxAndPosition board (x,y) (Δx,Δy)
         match tileBehindBoxes with
             | Floor, _ -> true
@@ -144,41 +145,46 @@ module Game =
         let board = Map.empty |> Map.add (0,0) Player |> Map.add (1,0) Box |> Map.add (2,0) Box |> Map.add (3,0) Box |> Map.add (4,0) Wall 
         Assert.False(canPushBox board (0,0) (1,0))
 *)
+    let calcMove (((side,x),y): Pos*int) ((Δx,Δy): int*int): Pos*int = 
+        match side with
+            | Left when Δx = -1 -> (Right, (x-1)),y
+            | Left when Δx = 1 -> (Right, (x)),y
+            | Right when Δx = 1 -> (Left, (x+1)),y
+            | Right when Δx = -1 -> (Left, (x)),y
+            | side -> (side,x), y + Δy
+
     let legalMove (board: Board) (Δ: int*int): bool = 
         let (Δx,Δy) = Δ
-        let ((side, x),y) = getPlayerPosition board
-        let pos' = (side, x+Δx),y+Δy
+        let playerPos = getPlayerPosition board
+        let pos' = calcMove playerPos Δ 
         let t' = getTile board pos' 
         printfn "checking move %A " pos'
         match t' with
             | Some c when c = Wall -> false 
-            | Some c when c = Box -> canPushBox board (x,y) (Δx,Δy) 
+            | Some c when c = Box -> true//canPushBox board (x,y) (Δx,Δy) 
             | Some _ -> true
             | None -> false
-        
+
     let move (board: Board) ((Δx,Δy): int*int): Board = 
         let playerPos = getPlayerPosition board
         let ((side, x),y) = playerPos 
-        let pos' = x+Δx,y+Δy
-        let leftPos' = (Left, x+Δx),y+Δy
-        let x',y' = pos'
-        let left' = (Left, x'),y'
-        let tile_Δ = getTile board ((Left, x+Δx),y+Δy)
+        let pos' = calcMove playerPos (Δx,Δy)
+        let tile_Δ = getTile board pos' 
         match tile_Δ with
             | Some Floor -> board
                             |> Map.remove playerPos 
-                            |> Map.remove leftPos' 
-                            |> Map.add leftPos' Player  
-                            |> Map.add ((Right,x'),y') Floor 
+                            |> Map.remove pos' 
+                            |> Map.add pos' Player  
+                            |> Map.add playerPos Floor 
             | Some Box ->
                         let (tileBehind, i) = getBehindBoxAndPosition board (x,y) (Δx,Δy)
                         if tileBehind <> Floor then failwith "this was not a legal move"
                         board 
                             |> Map.remove playerPos 
-                            |> Map.remove leftPos' 
+//                            |> Map.remove leftPos' 
                             |> Map.remove ((Left, x+2*Δx),y+2*Δy) 
                             |> Map.add playerPos Floor
-                            |> Map.add leftPos' Player  
+ //                           |> Map.add leftPos' Player  
                             |> Map.add ((Left, x+2*Δx),y+2*Δy) Box
                             |> Map.add ((Left, x+i*Δx),y+i*Δy) Box
             | _ -> board
