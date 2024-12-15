@@ -19,7 +19,7 @@ module Game =
     let serializeBoard (board: Board) : string =
         board |> Map.toList  
               |> List.groupBy (fun ((_,y),_) -> y) 
-              |> List.map (snd) |> List.map (List.map (snd)) 
+              |> List.map (snd) |> List.map (List.map (fun (((side,x),y),c) -> c) ) 
               |> List.map (Array.ofList)
               |> List.map (String)
               |> String.concat Environment.NewLine
