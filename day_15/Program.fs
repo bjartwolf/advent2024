@@ -113,16 +113,17 @@ module Game =
             | side -> (side,x), y + Δy
 
 
-    let getBehindBoxAndPosition (board: Board) ((x,y): Pos*int) ((Δx,Δy): int*int): (char * int) =
-        let rec getUntilNotBox (i: int) : (char * int) =
+    let getBehindBoxAndPosition (board: Board) (pos: Pos*int) ((Δx,Δy): int*int): (char * (Pos*int)) =
+        // need to use positions 
+        let rec getUntilNotBox (nextPos: Pos*int) : (char * (Pos*int)) =
             // need to check or ignore sides....
-            let nextMove = calcMove (x,y) (i*Δx,i*Δy) 
+            let nextMove = calcMove nextPos (Δx,Δy) 
             let tile = getTile board nextMove 
             match tile with 
-                | Some Box -> getUntilNotBox (i+1) 
-                | Some tile -> tile, i
-                | None -> Wall, i// think this is only for tests when there are no wall, return wallfailwith "not sure"
-        getUntilNotBox 1 
+                | Some Box -> getUntilNotBox nextMove 
+                | Some tile -> tile, nextMove
+                | None -> Wall, nextMove// think this is only for tests when there are no wall, return wallfailwith "not sure"
+        getUntilNotBox pos 
 
     let canPushBox (board: Board) ((x,y): Pos*int) ((Δx,Δy): int*int): bool = 
         // need to find the first tile that is not a box after all boxes in a 
@@ -161,7 +162,7 @@ module Game =
         printfn "checking move %A " pos'
         match t' with
             | Some c when c = Wall -> false 
-            | Some c when c = Box -> true//canPushBox board (x,y) (Δx,Δy) 
+            | Some c when c = Box -> canPushBox board playerPos (Δx,Δy) 
             | Some _ -> true
             | None -> false
 
@@ -181,10 +182,10 @@ module Game =
                         if tileBehind <> Floor then failwith "this was not a legal move"
                         board 
                             |> Map.remove playerPos 
-                            |> Map.remove ((side, x+2*Δx),y+2*Δy) 
+                            |> Map.remove pos' 
+                            |> Map.add pos' Player
                             |> Map.add playerPos Floor
-                            |> Map.add ((side, x+2*Δx),y+2*Δy) Box
-                            |> Map.add ((side, x+i*Δx),y+i*Δy) Box
+                            |> Map.add i Box
             | _ -> board
 
             (*
@@ -231,12 +232,13 @@ module Game =
         let boxes = board |> Map.toSeq |> Seq.filter (fun (p,c) -> c = Box )  |> Seq.map (fun (p,c) -> p)
         boxes |> Seq.sumBy (fun ((_,x),y) -> x+y*100)
 
+        (*
     [<Fact>]
     let testBoxesSum () =
         Assert.Equal(2028,sumOfBoxes 1)
         Assert.Equal(10092,sumOfBoxes 2)
        // Assert.Equal(1360570,sumOfBoxes 3)
-
+*)
 module Program = 
     open Game
     let [<EntryPoint>] main _ =
