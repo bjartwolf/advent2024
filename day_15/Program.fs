@@ -1,4 +1,5 @@
 ﻿open System
+open Xunit
 module Game =
     open System.IO
 
@@ -11,6 +12,14 @@ module Game =
     // y is first index , growing down on the board
     // x is index in array, growing to the right 
     type Board = Map<(int*int),char> 
+
+    let serializeBoard (board: Board) : string =
+        board |> Map.toList  
+              |> List.groupBy (fun ((_,y),_) -> y) 
+              |> List.map (snd) |> List.map (List.map (snd)) 
+              |> List.map (Array.ofList)
+              |> List.map (String)
+              |> String.concat Environment.NewLine
 
     let init (board_nr:int): string*string = 
         let board1t,moves1r = readInit "input1.txt"
@@ -31,13 +40,17 @@ module Game =
 
 
     // http://www.sokobano.de/wiki/index.php?title=Level_format
-    let wall = '#'
-    let player = '@'
+    [<Literal>]
+    let Wall = '#'
+    [<Literal>]
+    let Player = '@'
 //    let player_on_goal_square = '+'
-    let box = 'O'
+    [<Literal>]
+    let Box = 'O'
 //    let box_on_goal_square = '*'
  //   let goal_square = '.'
-    let floor = '.'
+    [<Literal>]
+    let Floor = '.'
 
     [<Literal>]
     let Keypress_left = '<'
@@ -60,14 +73,23 @@ module Game =
 
     let getPlayerPosition (board: Board): int*int =
           //board |> Map.filter (fun _ t -> t=player || t=player_on_goal_square )|> Map.keys |> Seq.head 
-          board |> Map.filter (fun _ t -> t=player) |> Map.keys |> Seq.head 
+          board |> Map.filter (fun _ t -> t=Player) |> Map.keys |> Seq.head 
 
     let getTile (board: Board) (pos: int*int): Char option = Map.tryFind pos board
 
     let canPushBox (board: Board) ((x,y): int*int) ((Δx,Δy): int*int): bool = 
         // this needs to change later
         let tileBehindBox = getTile board (x+2*Δx, y+2*Δy)
-        tileBehindBox = Some floor //|| tileBehindBox = Some goal_square 
+        tileBehindBox = Some Floor //|| tileBehindBox = Some goal_square 
+
+        // ikke skriv regler som ikke er lov i tullesokoban, det blir bare pes.
+    [<Fact>]
+    let testPushBoxes() = 
+        let board = Map.empty |> Map.add (0,0) Player |> Map.add (1,0) Box |> Map.add (2,0) Floor
+        printfn "%s" (serializeBoard board)
+        Assert.True(canPushBox board (0,0) (1,0))
+        Assert.False(canPushBox board (0,0) (-1,0))
+        Assert.False(canPushBox board (0,0) (0,1))
 
     let legalMove (board: Board) (Δ: int*int): bool = 
         let (Δx,Δy) = Δ
@@ -75,9 +97,8 @@ module Game =
         let pos' = x+Δx,y+Δy
         let t' = getTile board pos' 
         match t' with
-            | Some c when c = wall -> false 
-            | Some c when c = box -> false //canPushBox board (x,y) (Δx,Δy) // TODO PUSH ROW OF BOXES
-            //| Some c when c = box || c = box_on_goal_square -> canPushBox board (x,y) (Δx,Δy)
+            | Some c when c = Wall -> false 
+            | Some c when c = Box -> canPushBox board (x,y) (Δx,Δy) // TODO PUSH ROW OF BOXES
             | Some _ -> true
             | None -> false
         
@@ -87,7 +108,17 @@ module Game =
        // let tile = getTile board (x,y)
         let tile_Δ = getTile board (x+Δx,y+Δy)
         match tile_Δ with
-            | Some floor -> board |> Map.remove (x,y) |> Map.add pos' player  |> Map.add (x,y) floor
+            | Some Floor -> board
+                            |> Map.remove (x,y) 
+                            |> Map.add pos' Player  
+                            |> Map.add (x,y) Floor
+            | Some Box -> board 
+                            |> Map.remove (x,y) 
+                            |> Map.remove (x+Δx,y+Δy) 
+                            |> Map.remove (x+2*Δx,y+2*Δy) 
+                            |> Map.add (x,y) Floor
+                            |> Map.add pos' Player  
+                            |> Map.add (x+2*Δx,y+2*Δy) Box
             | _ -> board
 
         (*
@@ -126,14 +157,6 @@ module Game =
             printfn "illegal move"
             board//
             //(board, None)
-
-    let serializeBoard (board: Board) : string =
-        board |> Map.toList  
-              |> List.groupBy (fun ((_,y),_) -> y) 
-              |> List.map (snd) |> List.map (List.map (snd)) 
-              |> List.map (Array.ofList)
-              |> List.map (String)
-              |> String.concat Environment.NewLine
 
     let playBoard (boardnr: int): Board = 
         let boardS,allMoves = init boardnr
