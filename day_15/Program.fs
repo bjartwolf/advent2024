@@ -77,16 +77,19 @@ module Game =
 
     let getTile (board: Board) (pos: int*int): Char option = Map.tryFind pos board
 
-    let canPushBox (board: Board) ((x,y): int*int) ((Δx,Δy): int*int): bool = 
-        // need to find the first tile that is not a box after all boxes in a 
-        // row of boxes and if that is floor , then we push
+    let getBehindBoxAndPosition (board: Board) ((x,y): int*int) ((Δx,Δy): int*int): (char * int) =
         let rec getUntilNotBox (i: int) : (char * int) =
             let tile = getTile board (x+i*Δx,y+i*Δy)
             match tile with 
                 | Some Box -> getUntilNotBox (i+1) 
                 | Some tile -> tile, i
                 | None -> Wall, i// think this is only for tests when there are no wall, return wallfailwith "not sure"
-        let tileBehindBoxes = getUntilNotBox 1 
+        getUntilNotBox 1 
+
+    let canPushBox (board: Board) ((x,y): int*int) ((Δx,Δy): int*int): bool = 
+        // need to find the first tile that is not a box after all boxes in a 
+        // row of boxes and if that is floor , then we push
+        let tileBehindBoxes = getBehindBoxAndPosition board (x,y) (Δx,Δy)
         match tileBehindBoxes with
             | Floor, _ -> true
             | _ -> false
@@ -135,13 +138,16 @@ module Game =
                             |> Map.remove (x,y) 
                             |> Map.add pos' Player  
                             |> Map.add (x,y) Floor
-            | Some Box -> board 
+            | Some Box ->
+                        let (tileBehind, i) = getBehindBoxAndPosition board (x,y) (Δx,Δy)
+                        if tileBehind <> Floor then failwith "this was not a legal move"
+                        board 
                             |> Map.remove (x,y) 
                             |> Map.remove (x+Δx,y+Δy) 
-                            |> Map.remove (x+2*Δx,y+2*Δy) 
+                            |> Map.remove (x+i*Δx,y+2*Δy) 
                             |> Map.add (x,y) Floor
                             |> Map.add pos' Player  
-                            |> Map.add (x+2*Δx,y+2*Δy) Box
+                            |> Map.add (x+i*Δx,y+2*Δy) Box
             | _ -> board
 
         (*
