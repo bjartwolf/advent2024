@@ -28,7 +28,7 @@ module Game =
         let moves = lines.[1].Replace(Environment.NewLine,"")
         lines.[0],moves
 
-    type Side = Left | Right | Both
+    type Side = Left | Right
     type Pos = Side * int 
 
     // y is first index , growing down on the board
@@ -45,20 +45,17 @@ module Game =
         else
            -1 
 
-
     let serializeBoard (board: Board) : string =
         board |> Map.toList  
               |> List.groupBy (fun ((x,y),z) -> y) 
               |> List.sortBy (fun (y,x) -> y )
               |> List.map (fun (_,x) -> x |> List.sortWith comparePositions)
               |> List.map (List.map (fun (((side,x),y),c) -> match side, c with 
-                                                                                    | Both, Wall -> [|Wall;Wall|]
-                                                                                    | Both, Box -> [|Box;Box;|]
-                                                                                    | Left, Player -> [|Player;Floor|]
-//                                                                                    | Right, Player-> [|'.';'@'|]
-                                                                                    | Both, Floor -> [|Floor;Floor|]
-//                                                                                    | Right, Box -> [|'[';']'|]
-                                                                                    | _ -> [|' ';' '|] ) ) 
+                                                                                    | _, Wall -> [|Wall|]
+                                                                                    | _, Box -> [|Box;|]
+                                                                                    | _, Player -> [|Player|]
+                                                                                    | _, Floor-> [|'.'|]
+                                                                                    | _ -> [|' '|] ) ) 
               |> List.map (Array.ofList)
               |> List.map (fun x -> String( Array.concat x ))
               |> String.concat Environment.NewLine
@@ -81,12 +78,12 @@ module Game =
 
         board, moves 
 
-    let toNewMap ((x,y): int*int) (tile: Char) : (Pos*int)*Char =
+    let toNewMap ((x,y): int*int) (tile: Char) : ((Pos*int)*Char) list =
         match tile with
-            | Wall -> ((Both,x),y), Wall
-            | Player -> ((Left,x),y), Player 
-            | Box -> ((Both, x), y), Box
-            | Floor -> ((Both, x), y), Floor
+            | Wall -> [ ((Left,x),y), Wall; ((Right ,x),y), Wall ] 
+            | Player -> [((Left,x),y), Player ]
+            | Box ->  [ ((Left,x),y), Box; ((Right ,x),y), Box] 
+            | Floor ->  [ ((Left,x),y), Floor; ((Right ,x),y), Floor ] 
             | _ -> failwith "Unknown tile"
 
     let parseBoard (board:string): Board = 
@@ -98,20 +95,14 @@ module Game =
                 |> List.map (fun (y,e) -> e |> List.mapi (fun x c -> (x,y),c))
                 |> List.collect (id)
                 |> List.map (fun (p,c) -> toNewMap p c)
+                |> List.collect (id)
                 |> Map
 
     let getPlayerPosition (board: Board): Pos*int =
           board |> Map.filter (fun _ t -> t=Player) |> Map.keys |> Seq.head 
 
     let getTile (board: Board) (((side,x),y): Pos*int): Char option = 
-        // need to check more than one side, can be on both sides too
-        let leftTile = Map.tryFind ((Left,x),y) board
-        let rightTile = Map.tryFind ((Left,x),y) board
-        let bothTile = Map.tryFind ((Both,x),y) board
-        match leftTile, rightTile, bothTile with
-            | _,_, Some b -> Some b
-            | Some l,_, _ -> Some l
-            | _,Some r, _ -> Some r
+        Map.tryFind ((side,x),y) board
 
     let getBehindBoxAndPosition (board: Board) ((x,y): int*int) ((Δx,Δy): int*int): (char * int) =
         let rec getUntilNotBox (i: int) : (char * int) =
@@ -179,7 +170,6 @@ module Game =
                             |> Map.remove leftPos' 
                             |> Map.add leftPos' Player  
                             |> Map.add ((Right,x'),y') Floor 
-                            |> Map.add ((Both, x),y) Floor
             | Some Box ->
                         let (tileBehind, i) = getBehindBoxAndPosition board (x,y) (Δx,Δy)
                         if tileBehind <> Floor then failwith "this was not a legal move"
