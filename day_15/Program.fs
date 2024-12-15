@@ -35,20 +35,14 @@ module Game =
                                 | _ -> failwith "I don't have that"
 
         board, moves 
-//        let removeFirstNewline = board |> Seq.skip (Environment.NewLine.Length) |> Seq.toArray
-//        String(removeFirstNewline)
-
 
     // http://www.sokobano.de/wiki/index.php?title=Level_format
     [<Literal>]
     let Wall = '#'
     [<Literal>]
     let Player = '@'
-//    let player_on_goal_square = '+'
     [<Literal>]
     let Box = 'O'
-//    let box_on_goal_square = '*'
- //   let goal_square = '.'
     [<Literal>]
     let Floor = '.'
 
@@ -166,27 +160,6 @@ module Game =
 
 
 
-        (*
-        let tile_Δ' = if tile_Δ = Some goal_square || tile_Δ= Some box_on_goal_square then
-                                     player_on_goal_square 
-                                  else 
-                                     player
-        let isPushingBox =  tile_Δ = Some box || tile_Δ = Some box_on_goal_square 
-
-        let whatWasUnderPlayer = if tile = Some player then floor else goal_square
-        let boardWithoutPlayer = board |> Map.add (x,y) whatWasUnderPlayer
-        let boardWithPlayerBack = boardWithoutPlayer |> Map.add pos' tile_Δ'
-
-        if isPushingBox then 
-            let isBoxPushedOnGoalSquare = getTile board (x+2*Δx,y+2*Δy) = Some goal_square 
-            let boxTile = if isBoxPushedOnGoalSquare then box_on_goal_square else box
-            boardWithPlayerBack |> Map.add (x+2*Δx,y+2*Δy) boxTile
-        else 
-            boardWithPlayerBack 
-*)
-// todo add rules
-
-    //let movePlayer (board: Board) (keypress: Char): (Board * Char option) =
     let movePlayer (board: Board) (keypress: Char): Board = 
         let Δ = match keypress with
                                 | Keypress_left -> (-1,0) 
@@ -197,11 +170,9 @@ module Game =
         if (legalMove board Δ) then
             printfn "legal move"
             move board Δ
-//            (move board Δ, Some keypress)
         else 
             printfn "illegal move"
             board//
-            //(board, None)
 
     let playBoard (boardnr: int): Board = 
         let boardS,allMoves = init boardnr
@@ -216,15 +187,6 @@ module Game =
                             playAllMoves board' (String(Seq.tail moves |> Seq.toArray))
                 | None -> board 
         playAllMoves board allMoves
-
-
-
-
-//    [<Fact>]
-//    let test2 () = 
-
-        //let input = readInit "input1.txt" 
-//        Assert.Equal(1, input.Length) 
 
 module Program = 
     open Game
