@@ -76,7 +76,7 @@ module Game =
         let t' = getTile board pos' 
         match t' with
             | Some c when c = wall -> false 
-            | Some c when c = box -> canPushBox board (x,y) (Δx,Δy) // TODO PUSH ROW OF BOXES
+            | Some c when c = box -> false //canPushBox board (x,y) (Δx,Δy) // TODO PUSH ROW OF BOXES
             //| Some c when c = box || c = box_on_goal_square -> canPushBox board (x,y) (Δx,Δy)
             | Some _ -> true
             | None -> false
@@ -119,9 +119,11 @@ module Game =
                                 | Keypress_up -> (0,-1) 
                                 | _ -> failwith "There are only four known directions." 
         if (legalMove board Δ) then
+            printfn "legal move"
             move board Δ
 //            (move board Δ, Some keypress)
         else 
+            printfn "illegal move"
             board//
             //(board, None)
 
