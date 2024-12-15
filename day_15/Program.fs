@@ -201,6 +201,9 @@ module Game =
             | Some _ -> true
             | None -> false
 
+    let updatedMap elementsToAdd initialMap = 
+        elementsToAdd |> List.fold (fun acc (key, value) -> Map.add key value acc) initialMap
+
     let move (board: Board) ((Δx,Δy): int*int): Board = 
         let playerPos = getPlayerPosition board
         let ((side, x),y) = playerPos 
@@ -213,14 +216,16 @@ module Game =
                             |> Map.add pos' Player  
                             |> Map.add playerPos Floor 
             | Some LeftBox | Some RightBox ->
-                        let (tileBehind, i) = getBehindBoxAndPosition board playerPos (Δx,Δy)
-                        if tileBehind <> Floor then failwith "this was not a legal move"
+                        let boxes = collectAllBoxes board playerPos (Δx,Δy)
+                        let oldBoxesPositions = boxes |> List.map (fun (_,box) -> box)
+                        let moveBoxes = boxes |> List.map (fun (c,pos) -> calcMove pos (Δx,Δy), c) // move different for right and leftboxes//|> List.map (fun x,p -> )
                         board 
                             |> Map.remove playerPos 
-                            |> Map.remove pos' 
+                            |> Map.filter (fun x _ -> oldBoxesPositions |> List.contains x |> not) 
+                            |> (updatedMap moveBoxes)
                             |> Map.add pos' Player
                             |> Map.add playerPos Floor
-                            |> Map.add i Box
+//                            |> Map.add i Box
             | _ -> board
 
     [<Fact>]
