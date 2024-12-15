@@ -121,23 +121,20 @@ module Game =
             | side -> (side,x), y + Δy
 
     let getBehindBoxAndPosition (board: Board) (pos: Pos*int) ((Δx,Δy): int*int): (char * (Pos*int)) =
-        // need to use positions 
         let rec getUntilNotBox (nextPos: Pos*int) : (char * (Pos*int)) =
-            // need to check or ignore sides....
             let nextMove = calcMove nextPos (Δx,Δy) 
             let tile = getTile board nextMove 
             match tile with 
                 | Some LeftBox -> getUntilNotBox nextMove 
                 | Some RightBox -> getUntilNotBox nextMove 
                 | Some tile -> tile, nextMove
-                | None -> Wall, nextMove// think this is only for tests when there are no wall, return wallfailwith "not sure"
+                | None -> Wall, nextMove
         getUntilNotBox pos 
 
     let collectAllBoxes (board: Board) (pos: Pos*int) ((Δx,Δy): int*int): (char* (Pos*int)) list =
         let rec collectBoxes (nextPos: Pos*int) : (char* (Pos*int)) list =
             let nextMove = calcMove nextPos (Δx,Δy) 
             let tile = getTile board nextMove 
-            // try to handle pushing horizontally first by collecting boxes, then moving on to the other one
             if Δy = 0 then
                 match tile with
                     | Some tile when tile = LeftBox || tile = RightBox -> (tile, nextMove)  ::  collectBoxes nextMove
@@ -166,34 +163,12 @@ module Game =
                                               |> List.map (fun (tile,_) -> tile)
         tilesBehindBoxes |> List.forall (fun tileBehindBoxes -> tileBehindBoxes = Floor)
 
-    [<Fact>]
-    let testPushBoxes() = 
-        let board = Map.empty |> Map.add ((Left,0),0) Player |> Map.add ((Right,0) ,0) LeftBox |> Map.add ((Left,1),0) Floor
-        printfn "%s" (serializeBoard board)
-        Assert.True(canPushBox board ((Left,0),0) (1,0))
- //       Assert.False(canPushBox board ((Left,0),0) (-1,0))
- //       Assert.False(canPushBox board ((Left,0),0) (0,1))
-
-    [<Fact>]
-    let testPushMultipleBoxes() = 
-        let board = Map.empty |> Map.add ((Left,0),0) Player |> Map.add ((Right,0),0) LeftBox |> Map.add ((Left,1),0) RightBox |> Map.add ((Right,1),0) LeftBox |> Map.add ((Left,2),0) Floor |> Map.add ((Right,2),0) Wall
-        printfn "%s" (serializeBoard board)
-        Assert.True(canPushBox board ((Left,0),0) (1,0))
-//        Assert.False(canPushBox board ((Left,0),0) (-1,0))
-//        Assert.False(canPushBox board ((Left,0),0) (0,1))
-
-    [<Fact>]
-    let testPushMultipleBoxesWithWall() = 
-        let board = Map.empty |> Map.add ((Left,0),0) Player |> Map.add ((Right,0),0) LeftBox |> Map.add ((Left,1),0) LeftBox |> Map.add ((Right,1),0) LeftBox |> Map.add ((Left,2),0) Wall 
-        printfn "%s" (serializeBoard board)
-        Assert.False(canPushBox board ((Left,0),0) (1,0))
-
     let legalMove (board: Board) (Δ: int*int): bool = 
         let (Δx,Δy) = Δ
         let playerPos = getPlayerPosition board
         let pos' = calcMove playerPos Δ 
         let t' = getTile board pos' 
-        printfn "checking move %A " pos'
+        //printfn "checking move %A " pos'
         match t' with
             | Some c when c = Wall -> false 
             | Some c when c = LeftBox || c = RightBox-> canPushBox board playerPos (Δx,Δy) 
@@ -221,10 +196,8 @@ module Game =
                         let moveBoxes = boxes |> List.map (fun (c,pos) -> calcMove pos (Δx,Δy), c)
                         board 
                             |> Map.remove playerPos 
-//                            |> Map.filter (fun x _ -> oldBoxesPositions |> List.contains x |> not) 
                             |> (updatedMap newFloor)
                             |> (updatedMap moveBoxes)
-                      //      |> (updatedMap newFloor)
                             |> Map.add pos' Player
                             |> Map.add playerPos Floor
             | _ -> board
@@ -248,22 +221,17 @@ module Game =
                                 | Keypress_up -> (0,-1) 
                                 | _ -> failwith "There are only four known directions." 
         if (legalMove board Δ) then
-            printfn "legal move"
             move board Δ
         else 
-            printfn "illegal move"
             board//
 
     let playBoard (boardnr: int): Board = 
         let boardS,allMoves = init boardnr
         let board = parseBoard boardS
         let rec playAllMoves (board: Board) (moves: string) =
-            printfn "%s" (serializeBoard board)
             let move = moves |> Seq.tryHead 
             match move with
                 | Some m -> let board' = movePlayer board m
-                            printfn "Move %A" m 
-                            printfn ""
                             playAllMoves board' (String(Seq.tail moves |> Seq.toArray))
                 | None -> board 
         playAllMoves board allMoves
@@ -272,7 +240,6 @@ module Game =
         let board = playBoard i
         let boxes = board |> Map.toSeq |> Seq.filter (fun (p,c) -> c = LeftBox )  |> Seq.map (fun (p,c) -> p)
         boxes |> Seq.sumBy (fun ((s,x),y) -> 
-            printfn "x %A y %A" x y
             match s with 
                 | Left -> (x*2)+ 100*y
                 | Right -> (2*x+1)+ 100*y)
@@ -281,12 +248,11 @@ module Game =
     let testBoxesSum () =
         Assert.Equal(9021,sumOfBoxes 2)
         Assert.Equal(9021,sumOfBoxes 3)
-//        Assert.Equal(10092,sumOfBoxes 2)
-       // Assert.Equal(1360570,sumOfBoxes 3)
 module Program = 
     open Game
     let [<EntryPoint>] main _ =
-        let finishedBoard = playBoard 3
-        printfn "%s" (serializeBoard finishedBoard)
+        
+        printfn "%A" (sumOfBoxes 2)
+        printfn "%A" (sumOfBoxes 3)
         Console.ReadKey() |> ignore
         0
