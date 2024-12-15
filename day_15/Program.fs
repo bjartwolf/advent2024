@@ -148,14 +148,14 @@ module Game =
                     | Some LeftBox -> 
                             let rightPos = calcMove nextMove (1, 0)
                             let newBoxes = collectBoxes rightPos 
-                            (LeftBox, nextMove) :: collectBoxes nextMove @ newBoxes
+                            (LeftBox, nextMove) :: (RightBox,rightPos ):: collectBoxes nextMove @ newBoxes
                     | Some RightBox -> 
                             let leftPos = calcMove nextMove (-1, 0)
                             let newBoxes = collectBoxes leftPos 
-                            (RightBox, nextMove) :: collectBoxes nextMove @ newBoxes
+                            (RightBox, nextMove) :: (LeftBox, leftPos) ::collectBoxes nextMove @ newBoxes
                     | Some tile -> []
                     | None -> failwith "out of board without hitting wall" 
-        collectBoxes pos
+        collectBoxes pos 
 
 
     let canPushBox (board: Board) ((x,y): Pos*int) ((Δx,Δy): int*int): bool = 
