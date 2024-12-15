@@ -219,10 +219,14 @@ module Game =
                         let boxes = collectAllBoxes board playerPos (Δx,Δy)
                         let oldBoxesPositions = boxes |> List.map (fun (_,box) -> box)
                         let moveBoxes = boxes |> List.map (fun (c,pos) -> calcMove pos (Δx,Δy), c) // move different for right and leftboxes//|> List.map (fun x,p -> )
+                        let movedBoxes' = if Δx = 1 then
+                                            moveBoxes |> List.map (fun (pos,c) -> match c with | LeftBox -> (pos,RightBox) | RightBox -> (pos,LeftBox) | _ -> failwith "not a box")
+                                          else 
+                                            moveBoxes |> List.map (fun (pos,c) -> match c with | LeftBox -> (pos,LeftBox) | RightBox -> (pos,RightBox) | _ -> failwith "not a box")
                         board 
                             |> Map.remove playerPos 
                             |> Map.filter (fun x _ -> oldBoxesPositions |> List.contains x |> not) 
-                            |> (updatedMap moveBoxes)
+                            |> (updatedMap movedBoxes')
                             |> Map.add pos' Player
                             |> Map.add playerPos Floor
 //                            |> Map.add i Box
