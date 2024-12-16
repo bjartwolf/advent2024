@@ -77,7 +77,7 @@ module Maze =
                                                                                   if (n_i = o_i - 1 && n_j = o_j && n_dir = N && o_dir = N) then true
                                                                                   elif (n_i = o_i + 1 && n_j = o_j && n_dir = S && o_dir = S) then true
                                                                                   elif (n_i = o_i && n_j = o_j + 1 && n_dir = East && o_dir = East) then true
-                                                                                  elif (n_i = o_i && n_j = o_j - 1 && n_dir = W && o_dir = N) then true
+                                                                                  elif (n_i = o_i && n_j = o_j - 1 && n_dir = W && o_dir = W) then true
                                                                                   else false)
                             let connectedEdges = connectedNodes |> List.map (fun other -> {u = node; v = other; ω_uv = 1})
                             yield! connectedEdges
