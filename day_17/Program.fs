@@ -51,9 +51,38 @@ module Maze =
                                         yield {n = (i,j,East) }
                                         yield {n = (i,j,N) }
                                         yield {n = (i,j,S) }
-                                    else ()
-                            ] 
-        Set.empty, findStartNode, [{n = 0,0,S};{n = 0,0,S} ]
+                                    else () ] |> List.ofSeq
+        let findNodes = [for i in 0..mazeTxt.Length-1 do
+                                for j in 0..mazeTxt.[i].Length-1 do
+                                    if mazeTxt.[i].[j] = '#' then 
+                                        ()
+                                    elif mazeTxt.[i].[j] = '.' || mazeTxt.[i].[j] = 'S' then  // counting startnode as a regular node to turn, endnodes we have found
+                                        yield {n = (i,j,W) }
+                                        yield {n = (i,j,East) }
+                                        yield {n = (i,j,N) }
+                                        yield {n = (i,j,S) }
+                                    else
+                                        ()
+                             ] |> List.ofSeq
+        let allNodes = findNodes @ findEndNodes
+
+        let edges = [ for node in allNodes do
+                           // noden kan snu til høyre og venstre
+                            yield {u = node; v = turnLeft node; ω_uv = 1000}
+                            yield {u = node; v = turnRight node; ω_uv = 1000}
+                           // hvis noden har en node med samme retning over i nord, så er det en edge for alle retninger 
+                            let connectedNodes = allNodes |> List.filter (fun other-> 
+                                                                                  let (n_i,n_j,n_dir) = node.n
+                                                                                  let (o_i,o_j,o_dir) = other.n
+                                                                                  if (n_i = o_i - 1 && n_j = o_j && n_dir = N && o_dir = N) then true
+                                                                                  elif (n_i = o_i + 1 && n_j = o_j && n_dir = S && o_dir = S) then true
+                                                                                  elif (n_i = o_i && n_j = o_j + 1 && n_dir = East && o_dir = East) then true
+                                                                                  elif (n_i = o_i && n_j = o_j - 1 && n_dir = W && o_dir = N) then true
+                                                                                  else false)
+                            let connectedEdges = connectedNodes |> List.map (fun other -> {u = node; v = other; ω_uv = 1})
+                            yield! connectedEdges
+                            ] |> Set.ofList
+        edges, findStartNode, findEndNodes 
 
     [<Fact>]
     let test2 () = 
