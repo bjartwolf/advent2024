@@ -3,6 +3,7 @@
 type Direction = | N | East | S | W
 type Node = { n : int*int*Direction}
 type Nodes = Node Set
+type NodeHistory = Map<Node,Node>
 open FSharpx.Collections
 module PQ = PriorityQueue
 
@@ -74,8 +75,8 @@ module Maze =
                             let connectedNodes = allNodes |> List.filter (fun other-> 
                                                                                   let (n_i,n_j,n_dir) = node.n
                                                                                   let (o_i,o_j,o_dir) = other.n
-                                                                                  if (n_i = o_i - 1 && n_j = o_j && n_dir = N && o_dir = N) then true
-                                                                                  elif (n_i = o_i + 1 && n_j = o_j && n_dir = S && o_dir = S) then true
+                                                                                  if (n_i = o_i - 1 && n_j = o_j && n_dir = S && o_dir = S) then true
+                                                                                  elif (n_i = o_i + 1 && n_j = o_j && n_dir = N && o_dir = N) then true
                                                                                   elif (n_i = o_i && n_j = o_j + 1 && n_dir = East && o_dir = East) then true
                                                                                   elif (n_i = o_i && n_j = o_j - 1 && n_dir = W && o_dir = W) then true
                                                                                   else false)
@@ -108,6 +109,9 @@ let relax (d_u: int) explored vs =
       |> Set.map (fun v -> d_u + v.ω_uv, v.v)
       |> Set.filter (fun dn -> closerOrUndiscovered explored dn) 
 
+//printNodes (nodes: )
+
+
 // Using notation from https://www-student.cse.buffalo.edu/~atri/cse331/support/notation/shortest-path.html
 // Somewhat different in my book
 // d' is the map from Node to best known upper bound on known nodes at any time,
@@ -118,29 +122,35 @@ let relax (d_u: int) explored vs =
 // Ε is the set of all edges in the Graph.
 [<TailCall>]
 let dijkstra Ε s =  
-   let rec dijkstra_rec R d' =  
+   let rec dijkstra_rec R d' (history: NodeHistory) =  
         match (PQ.tryPop R) with
-            | None  -> d' 
+            | None  -> d', history 
             | Some ((d_u,u), R') ->  
-                let relaxed: d_Node Set = adjacent u Ε 
-                                            |> relax d_u d' 
+                let relaxed: d_Node Set = adjacent u Ε |> relax d_u d' 
+                let relaxedNodes = relaxed |> Set.map (fun (_,x) -> u,x)
+                let history' = updateMapWithSet history relaxedNodes
                 dijkstra_rec (updatePQWithSet R' relaxed) 
                              (updateMapWithSet d' relaxed)
+                             history'
    let pq = PQ.empty false |> PQ.insert (0, s)
-   dijkstra_rec pq (Map.ofList [s, 0]) 
+   dijkstra_rec pq (Map.ofList [s, 0]) Map.empty
 
 
-
+let rec printHistory (startNode: Node ) (history: NodeHistory) = 
+    printfn "%A" startNode
+    let next = Map.tryFind startNode history
+    match next with
+        | None -> printfn "start"
+        | Some node -> printHistory node (history |> Map.remove startNode)
 module Program = 
     open System
     open Maze 
     let [<EntryPoint>] main _ = 
-        let edges, start, endNodes = readInit "input2.txt"
-        let solution = dijkstra edges start
-        for node in endNodes do
-            match Map.tryFind node solution with
-                | Some dist -> printfn "Distance to end node %A is %A" node dist
-                | None -> printfn "No path to end node %A" node
-//        printfn "%A" solution
+        let edges, start, endNodes = readInit "input1.txt"
+        let solution,history = dijkstra edges start
+        printfn "history: %A" history 
+        let value, shortestNode = endNodes |> List.map (fun n -> Map.find n solution, n) |> List.min
+        printfn "%A" value 
+        printHistory shortestNode history 
         Console.ReadKey() |> ignore
         0
