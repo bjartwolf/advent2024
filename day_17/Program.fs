@@ -135,12 +135,12 @@ module Program =
     open System
     open Maze 
     let [<EntryPoint>] main _ = 
-        let edges, start, endNodes = readInit "input1.txt"
+        let edges, start, endNodes = readInit "input2.txt"
         let solution = dijkstra edges start
         for node in endNodes do
             match Map.tryFind node solution with
                 | Some dist -> printfn "Distance to end node %A is %A" node dist
                 | None -> printfn "No path to end node %A" node
-        printfn "%A" solution
+//        printfn "%A" solution
         Console.ReadKey() |> ignore
         0
