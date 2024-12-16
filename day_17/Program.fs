@@ -102,7 +102,7 @@ let adjacent u e =
 let relax (d_u: int) explored vs = 
     let closerOrUndiscovered explored ((dist,n):d_Node) = 
         match Map.tryFind n explored with
-            | Some existingDist -> dist <= existingDist
+            | Some existingDist -> dist <= existingDist && dist <= 85420
             | None -> true
     vs 
       |> Set.map (fun v -> d_u + v.ω_uv, v.v)
@@ -130,14 +130,15 @@ let dijkstra Ε s =
                 // we look at all the new nodes 
                 for (cost,node) in relaxed do
                     let his = history |> Map.tryFind node 
-                    match his with
-                        | None -> history <- history |> Map.add node (cost, [u]) 
-                        | Some (histCost,histNodes) -> if histCost > cost then
-                                                            history <- history |> Map.add node (cost, [u]) 
-                                                       elif histCost < cost then
-                                                            ()
-                                                       else
-                                                            history <- history |> Map.add node (cost, (u::histNodes) |> List.distinct) 
+                    if cost <= 85420 then
+                        match his with
+                            | None -> history <- history |> Map.add node (cost, [u]) 
+                            | Some (histCost,histNodes) -> if histCost > cost then
+                                                                history <- history |> Map.add node (cost, [u]) 
+                                                           elif histCost < cost then
+                                                                ()
+                                                           else
+                                                                history <- history |> Map.add node (cost, (u::histNodes) |> List.distinct) 
                 dijkstra_rec (updatePQWithSet R' relaxed) 
                              (updateMapWithSet d' relaxed)
    let pq = PQ.empty false |> PQ.insert (0, s)
@@ -145,24 +146,50 @@ let dijkstra Ε s =
 
 
 let mutable i = 0
-let rec printHistory (startNode: Node ) (history: Map<Node,(int*Node list)>) = 
+let rec printHistory (startNode: Node ) (history: Map<Node,(int*Node list)>) : Node seq = 
+    [
     i <- i + 1
-    printfn "%A" startNode
+//    printfn "%A" startNode
     let next = Map.tryFind startNode history
     match next with
-        | None -> printfn "start %A" (i+1)
-        | Some (x, node :: rest) -> printHistory node history 
-        | Some (x, []) -> printHistory startNode (Map.remove startNode history)
+        | None -> 
+            i <-i+1
+//            printfn "start %A" (i)
+        | Some (x, []) -> 
+                         yield startNode
+                         yield! printHistory startNode (Map.remove startNode history)
+        | Some (x, node :: rest) -> if rest <> [] then yield! printHistory (rest.Head) history 
+                                    yield node
+                                    yield! printHistory node history 
+    ]
 
+let printNodes (nodes: Node list) = 
+    let maxX = nodes |> List.map (fun n -> let (i,j,_) = n.n in i) |> List.max 
+    let maxY = nodes |> List.map (fun n -> let (i,j,_) = n.n in i) |> List.max 
+    [
+        for x in 0..maxX do 
+            for y in 0..maxX do 
+                if nodes |> List.exists (fun n -> let (i,j,_) = n.n in i = x && j = y) then 
+                    printf "#"
+                else
+                    printf " "
+            printfn ""
+
+    ] |> Seq.toList |> ignore
+
+    ()
 module Program = 
     open System
     open Maze 
     let [<EntryPoint>] main _ = 
-        let edges, start, endNodes = readInit "input1a.txt"
+        let edges, start, endNodes = readInit "input2.txt"
         let solution= dijkstra edges start
         let value, shortestNode = endNodes |> List.map (fun n -> Map.find n solution, n) |> List.min
         printfn "%A" value 
 //        printfn "%A" history
-        printHistory shortestNode history 
+        let history = printHistory shortestNode history |> Seq.toList
+        printNodes history
+        printfn "total history %A" (history |> List.distinctBy (fun n -> let i,j,_ = n.n
+                                                                         (i,j))  |> List.length)
         Console.ReadKey() |> ignore
         0
