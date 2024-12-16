@@ -46,7 +46,7 @@ module Maze =
 
         let findEndNodes = [for i in 0..mazeTxt.Length-1 do
                                 for j in 0..mazeTxt.[i].Length-1 do
-                                    if mazeTxt.[i].[j] = 'S' then 
+                                    if mazeTxt.[i].[j] = 'E' then 
                                         yield {n = (i,j,W) }
                                         yield {n = (i,j,East) }
                                         yield {n = (i,j,N) }
@@ -131,4 +131,16 @@ let dijkstra Ε s =
 
 
 
-module Program = let [<EntryPoint>] main _ = 0
+module Program = 
+    open System
+    open Maze 
+    let [<EntryPoint>] main _ = 
+        let edges, start, endNodes = readInit "input1.txt"
+        let solution = dijkstra edges start
+        for node in endNodes do
+            match Map.tryFind node solution with
+                | Some dist -> printfn "Distance to end node %A is %A" node dist
+                | None -> printfn "No path to end node %A" node
+        printfn "%A" solution
+        Console.ReadKey() |> ignore
+        0
