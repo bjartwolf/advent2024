@@ -90,7 +90,6 @@ module Maze =
         let e, n, _= readInit "input1.txt" 
         Assert.Equal((13,1,East), n.n) 
 
-
 let updateMapWithSet map updates =  
     updates |> Set.fold (fun accMap (key,value) -> Map.add value key accMap) map
 
@@ -103,13 +102,12 @@ let adjacent u e =
 let relax (d_u: int) explored vs = 
     let closerOrUndiscovered explored ((dist,n):d_Node) = 
         match Map.tryFind n explored with
-            | Some existingDist -> dist < existingDist
+            | Some existingDist -> dist <= existingDist
             | None -> true
     vs 
       |> Set.map (fun v -> d_u + v.ω_uv, v.v)
       |> Set.filter (fun dn -> closerOrUndiscovered explored dn) 
 
-//printNodes (nodes: )
 
 
 // Using notation from https://www-student.cse.buffalo.edu/~atri/cse331/support/notation/shortest-path.html
@@ -120,37 +118,51 @@ let relax (d_u: int) explored vs =
 // d_u is the known distance to node u
 // s is the source node
 // Ε is the set of all edges in the Graph.
+let mutable history : Map<Node, int*(Node list)> = Map.empty
 [<TailCall>]
 let dijkstra Ε s =  
-   let rec dijkstra_rec R d' (history: NodeHistory) =  
+   let rec dijkstra_rec R d'  =  
         match (PQ.tryPop R) with
-            | None  -> d', history 
+            | None  -> d'
             | Some ((d_u,u), R') ->  
                 let relaxed: d_Node Set = adjacent u Ε |> relax d_u d' 
-                let relaxedNodes = relaxed |> Set.map (fun (_,x) -> u,x)
-                let history' = updateMapWithSet history relaxedNodes
+                // all the nodes that are found now we can add to history or replace history
+                // we look at all the new nodes 
+                for (cost,node) in relaxed do
+                    let his = history |> Map.tryFind node 
+                    match his with
+                        | None -> history <- history |> Map.add node (cost, [u]) 
+                        | Some (histCost,histNodes) -> if histCost > cost then
+                                                            history <- history |> Map.add node (cost, [u]) 
+                                                       elif histCost < cost then
+                                                            ()
+                                                       else
+                                                            history <- history |> Map.add node (cost, (u::histNodes) |> List.distinct) 
                 dijkstra_rec (updatePQWithSet R' relaxed) 
                              (updateMapWithSet d' relaxed)
-                             history'
    let pq = PQ.empty false |> PQ.insert (0, s)
-   dijkstra_rec pq (Map.ofList [s, 0]) Map.empty
+   dijkstra_rec pq (Map.ofList [s, 0]) 
 
 
-let rec printHistory (startNode: Node ) (history: NodeHistory) = 
+let mutable i = 0
+let rec printHistory (startNode: Node ) (history: Map<Node,(int*Node list)>) = 
+    i <- i + 1
     printfn "%A" startNode
     let next = Map.tryFind startNode history
     match next with
-        | None -> printfn "start"
-        | Some node -> printHistory node (history |> Map.remove startNode)
+        | None -> printfn "start %A" (i+1)
+        | Some (x, node :: rest) -> printHistory node history 
+        | Some (x, []) -> printHistory startNode (Map.remove startNode history)
+
 module Program = 
     open System
     open Maze 
     let [<EntryPoint>] main _ = 
-        let edges, start, endNodes = readInit "input1.txt"
-        let solution,history = dijkstra edges start
-        printfn "history: %A" history 
+        let edges, start, endNodes = readInit "input1a.txt"
+        let solution= dijkstra edges start
         let value, shortestNode = endNodes |> List.map (fun n -> Map.find n solution, n) |> List.min
         printfn "%A" value 
+//        printfn "%A" history
         printHistory shortestNode history 
         Console.ReadKey() |> ignore
         0
