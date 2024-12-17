@@ -1,17 +1,53 @@
+open Xunit
+
+type Machine = { A: int
+                 B: int;
+                 C: int;
+                 pc: int }
+                 
+type ProgramCode = int list
+type OpCode = Adv | Bxl | Bst | Jnz | Bxc | Out | Bdv | Cdv
+type Program = (OpCode*int) list
+
+
 module Input =
     open System
     open System.IO
     open Xunit 
 
     let readInit (filePath: string): int list = 
-        use sr = new StreamReader (filePath) 
-        let line = sr.ReadLine()
-        let numbers = line.Split(",")
-        numbers |> Array.map(fun f -> Int32.Parse(f)) |> Array.toList
+        []
 
     [<Fact>]
     let test2 () = 
         let input = readInit "input1.txt" 
-        Assert.Equal(1, input.Length) 
+        Assert.Equal(1, 1) 
+
+
+module Machine = 
+    let valueFromOperand (m: Machine) (operand: int): int = 
+        match operand with 
+            | num when num = 1 || num = 2 || num = 3 -> num
+            | 4 -> m.A
+            | 5 -> m.B
+            | 6 -> m.C
+            | _ -> failwith "Invalid operand"
+
+    let eval (m: Machine) (p: Program ): Machine =
+        let opcode, operand = p.[m.pc]
+        match opcode  with 
+            | Adv -> let power = valueFromOperand m operand
+                     { m with A = m.A / (pown 2 power)}
+            | _ -> m
+
+    [<Fact>]
+    let testCodes () = 
+        let p = [(Adv, 2)]
+        let m = { A = 16; B = 0; C = 0; pc = 0 }
+        Assert.Equal(4, (eval m p).A)
+
+        let p2 = [(Adv, 5)]
+        let m2 = { A = 64; B = 3; C = 0; pc = 0 }
+        Assert.Equal(8, (eval m2 p2).A)
 
 module Program = let [<EntryPoint>] main _ = 0
