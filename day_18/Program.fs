@@ -111,13 +111,16 @@ module Solver =
         printNodes 7 nodes1 
         let distanceToEnd = distanceToEndNode 7 "input1.txt" 12
         Assert.Equal(Some 22, distanceToEnd)
-        let distanceToEnd = distanceToEndNode 71 "input2.txt" 1024 
-        Assert.Equal(Some 320, distanceToEnd)
         let input2 = readInit "input2.txt" 
         let nodes2 = generateNodes 71 1024 input2
-        printNodes 71 nodes2
+       // printNodes 71 nodes2
         Assert.Equal(3450, input2.Length) 
 
         Assert.Equal(25, input1.Length) 
 
-module Program = let [<EntryPoint>] main _ = 0
+module Program = 
+    open Solver
+    let [<EntryPoint>] main _ =
+        let distanceToEnd = distanceToEndNode 71 "input2.txt" 1024 
+        printfn "%A" distanceToEnd
+        0
