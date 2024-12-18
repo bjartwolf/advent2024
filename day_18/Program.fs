@@ -104,6 +104,21 @@ module Solver =
         let solved = dijkstra edges { n= (0,0)}
         solved |> Map.tryFind {n = (size-1,size-1)}
 
+    let findFirstNone (size: int) (fileName: string) : int*int =
+        let bytes = readInit fileName   
+        let middle = bytes.Length / 2 
+        let rec findFirstNone_rec i step = 
+            printfn "checking %A" i
+            let d1= distanceToEndNode size fileName i
+            let dnext = distanceToEndNode size fileName (i+1)
+            match d1, dnext with
+                | Some _, None -> Some (i+1) 
+                | Some _,Some _ -> findFirstNone_rec (i+step/2) (step/2)
+                | None , None -> findFirstNone_rec (i-step/2) (step/2)
+        let firstBlockingByte = findFirstNone_rec middle middle
+        bytes |> List.item (firstBlockingByte.Value-1)
+
+
     [<Fact>]
     let test2 () = 
         let input1 = readInit "input1.txt" 
@@ -111,8 +126,11 @@ module Solver =
         printNodes 7 nodes1 
         let distanceToEnd = distanceToEndNode 7 "input1.txt" 12
         Assert.Equal(Some 22, distanceToEnd)
+        let distanceToEnd21 = distanceToEndNode 7 "input1.txt" 21 
+        Assert.Equal(None, distanceToEnd21)
+        Assert.Equal((6,1), findFirstNone 7 "input1.txt")
         let input2 = readInit "input2.txt" 
-        let nodes2 = generateNodes 71 1024 input2
+//        let nodes2 = generateNodes 71 1024 input2
        // printNodes 71 nodes2
         Assert.Equal(3450, input2.Length) 
 
@@ -120,7 +138,16 @@ module Solver =
 
 module Program = 
     open Solver
+    open Input
     let [<EntryPoint>] main _ =
+        let input2 = readInit "input2.txt" 
+        printfn "answer %A " input2.[2906-1]
         let distanceToEnd = distanceToEndNode 71 "input2.txt" 1024 
         printfn "%A" distanceToEnd
+        let distanceToEnd = distanceToEndNode 71 "input2.txt" 2905 
+        printfn "%A" distanceToEnd
+        let distanceToEnd = distanceToEndNode 71 "input2.txt" 2906 
+        printfn "%A" distanceToEnd
+        let firstNone = findFirstNone 71 "input2.txt" 
+        printfn "solution %A" firstNone 
         0
