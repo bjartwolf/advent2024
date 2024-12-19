@@ -23,7 +23,6 @@ module Advent =
     let designMatchPatterns (patterns: string list) (design: string) : bool =
         let mutable nomatch = Set.empty 
         let matchingPatternStripper = stripMatchingPatterns patterns 
-        printfn "Checking %A" design
         let rec designMatchPatterns' (design: string) : bool =
             let strippedDesign = matchingPatternStripper design
             match strippedDesign with 
@@ -39,7 +38,6 @@ module Advent =
                                     false
                                 else 
                                     let result = designMatchPatterns' h
-                                    printfn "checking %A is %A" h result
                                     if not result then 
                                         nomatch<- nomatch.Add(h) 
                                         t |> List.exists (fun d -> designMatchPatterns' d) 
@@ -75,7 +73,7 @@ module Advent =
         Assert.False(designMatchPatterns input1 "bbrgwb")
         Assert.Equal(6, countPossibleDesigns input1 designs1)
         let input2,designs2 = get_input "input2.txt"
-        Assert.NotEqual(307, countPossibleDesigns input2 designs2)
+        Assert.Equal(311, countPossibleDesigns input2 designs2)
         ()
          
 
