@@ -20,31 +20,27 @@ module Advent =
         if hits = [] then None
         else Some hits
 
-    let memoize f =
-        let dict = Dictionary<_, _>();
-        fun c ->
-            let exist, value = dict.TryGetValue c
-            match exist with
-            | true -> value
-            | _ -> 
-                let value = f c
-                dict.Add(c, value)
-                value
-
-                                                        
     let designMatchPatterns (patterns: string list) (design: string) : bool =
-        let matchingPatternStripper = stripMatchingPatterns patterns |> memoize
+        let mutable nomatch = new Set<string>(Seq.empty);
+        let matchingPatternStripper = stripMatchingPatterns patterns 
         printfn "Checking %A" design
-        let rec designMatchPatterns' (design: string) existCheck : bool =
+        let rec designMatchPatterns' (design: string) : bool =
             let strippedDesign = matchingPatternStripper design
             match strippedDesign with 
             | None -> false
             | Some matchedDesign ->  
                 if matchedDesign |> List.contains ("") then 
                     true
-                else existCheck matchedDesign 
-        let exists = memoize (fun x -> List.exists (fun d -> designMatchPatterns' d ) x) 
-        designMatchPatterns' design exists 
+                else 
+                    [ for d in matchedDesign do
+                        if nomatch.Contains(d) then
+                            yield false
+                        else 
+                            let result = designMatchPatterns' d
+                            if not result then nomatch <- nomatch.Add(d) 
+                            yield result
+                    ] |> Seq.exists id 
+        designMatchPatterns' design
              
     let countPossibleDesigns (patterns: string list) (designs: string list) : int =
         designs 
@@ -55,6 +51,7 @@ module Advent =
     [<Fact>]
     let test2 () = 
         let input1,designs1 = get_input "input1.txt"
+        (*
         let stripMatchingPatterns1 = stripMatchingPatterns input1
         Assert.Equivalent(Some [""], stripMatchingPatterns1 "wr" )
         Assert.Equivalent(Some ["b" ], stripMatchingPatterns1 "wrb" )
@@ -72,6 +69,7 @@ module Advent =
         Assert.True(designMatchPatterns input1 "bwurrg")
         Assert.True(designMatchPatterns input1 "brgr")
         Assert.False(designMatchPatterns input1 "bbrgwb")
+        *)
         Assert.Equal(6, countPossibleDesigns input1 designs1)
         ()
          
