@@ -44,11 +44,39 @@ module Advent =
                                     else 
                                         result 
         designMatchPatterns' design
-             
+
+    let designMatchPatternsCount (patterns: string list) (design: string) : int64 =
+        let mutable variations: Map<string,int64> = Map.empty 
+        let matchingPatternStripper = stripMatchingPatterns patterns 
+        let rec designMatchPatterns' (design: string) : int64 =
+            let strippedDesign = matchingPatternStripper design
+            match strippedDesign with 
+            | None -> 0L
+            | Some matchedDesign -> let foundMatches = (matchedDesign |> List.filter (fun x -> x = "") |> List.length) |> int64
+                                    let newMatches = 
+                                        match matchedDesign |> List.filter (fun x -> x <> "") with 
+                                            | [] -> 0L
+                                            | h ->  let allKeys = variations |> Map.keys |> Seq.toList
+                                                    let knownKeys = h |> List.filter (fun k -> List.contains k allKeys)
+                                                    let newKeys = List.except knownKeys h
+                                                    let knownValues = Map.filter (fun k _ -> knownKeys |> Seq.contains k) variations |> Map.toSeq |> Seq.sumBy (fun (_,v) -> v)
+                                                    let newValues = newKeys |> Seq.sumBy (fun k -> 
+                                                        let result = designMatchPatterns' k
+                                                        variations <- variations.Add(k,result)
+                                                        result)
+                                                    newValues + knownValues 
+                                    foundMatches + newMatches
+        designMatchPatterns' design
+              
     let countPossibleDesigns (patterns: string list) (designs: string list) : int =
         designs 
             |> List.sortDescending
             |> List.filter (designMatchPatterns patterns ) |> List.length
+
+    let countAllPossibleDesigns (patterns: string list) (designs: string list) : int64 =
+        designs 
+            |> List.map (fun x -> designMatchPatternsCount patterns x) 
+            |> List.sum
 
 
     [<Fact>]
@@ -72,6 +100,7 @@ module Advent =
         Assert.True(designMatchPatterns input1 "brgr")
         Assert.False(designMatchPatterns input1 "bbrgwb")
         Assert.Equal(6, countPossibleDesigns input1 designs1)
+        Assert.Equal(16L, countAllPossibleDesigns input1 designs1)
         let input2,designs2 = get_input "input2.txt"
         Assert.Equal(311, countPossibleDesigns input2 designs2)
         ()
@@ -81,7 +110,9 @@ module Program =
     open Advent
     let [<EntryPoint>] main _ = 
         let input2,designs2 = get_input "input2.txt"
-        let count = countPossibleDesigns input2 designs2
-        printfn "%A" count 
+        //let count = countPossibleDesigns input2 designs2
+        //printfn "%A" count 
+        let countAll = countAllPossibleDesigns input2 designs2
+        printfn "%A" countAll
         System.Console.ReadKey() |> ignore
         0
